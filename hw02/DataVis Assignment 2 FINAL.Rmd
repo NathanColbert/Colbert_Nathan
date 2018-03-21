@@ -1,0 +1,194 @@
+---
+title: "Data Visualization Assignment 2"
+author: "Nathan Colbert"
+date: "3/12/2018"
+output:
+  html_document:
+    keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=FALSE, eval=FALSE, echo=FALSE}
+library(tidyverse)
+fire_all <- read_csv("~/Downloads/Incidents_Responded_to_by_Fire_Companies.csv") 
+fire_all$year <- substr(fire_all$INCIDENT_DATE_TIME, 7, 10)
+fire <- fire_all%>% 
+  filter(HIGHEST_LEVEL_DESC == "7 - Signal 7-5") %>%
+  filter(year==2015)
+
+devtools::install_github("dkahle/ggmap")
+library(ggmap)
+
+library(stringr)
+
+# Make list of addresses
+address <- str_c( str_to_title(fire$STREET_HIGHWAY),
+                  "New York, NY",
+                  fire$ZIP_CODE,
+                  sep=", ")
+
+# Register Google API Key
+register_google(key = Sys.getenv("AIzaSyCh3zrABZ2FBP2fPkrBA2VVi27b4zPo-RU"))
+
+# Geocode Addresses
+latlong <- geocode(address, output = c("latlon"))
+
+# Merge on
+fire$Latitude  <- latlong$lat
+fire$Longitude <- latlong$lon
+
+# Save File
+write_csv(fire, "severe_incidents.csv")
+```
+
+# Question 1
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+library(dplyr)
+fire2 <- read.csv("~/Documents/GitHub/DV_CU_course_material/Exercises/07_fire-graded/severe_incidents.csv")
+firehouse <- read.csv("~/Documents/GitHub/DV_CU_course_material/Exercises/07_fire-graded/FDNY_Firehouse_Listing.csv")
+colnames(firehouse)[5] <- "FH_Lat"
+colnames(firehouse)[6] <- "FH_Long"
+fh_loc <- firehouse %>% select(FacilityName, Borough, FH_Lat, FH_Long)
+library(leaflet)
+content <- paste("Date:", fire2$INCIDENT_DATE_TIME, "<br/>",
+                 "Type:", fire2$INCIDENT_TYPE_DESC, "<br/>",
+                 "Spread:", fire2$FIRE_SPREAD_DESC, "<br/>")
+
+m <- leaflet(width = "100%") %>% setView(lat = 40.7128, lng = -74.0060, zoom = 10) %>% addTiles('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png') %>% addCircles(data = fire2, group = "Incidents", popup = content)
+m
+```
+
+
+# Question 2
+
+## 2A
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+public <- c(1:18)
+education <- c(2:6)
+pol_hosp <- c(3:9)
+residential <- c(4:7, 9:11)
+commercial <- c(5:23, 25:36)
+infrastructure <- c(7, 8, 13:22)
+natural <- c(6:11)
+other <- c(7, 8)
+levels(fire2$PROPERTY_USE_DESC)[public] <- "Public Use"
+levels(fire2$PROPERTY_USE_DESC)[education] <- "Education"
+levels(fire2$PROPERTY_USE_DESC)[pol_hosp] <- "Police/Doctor"
+levels(fire2$PROPERTY_USE_DESC)[residential] <- "Residential"
+levels(fire2$PROPERTY_USE_DESC)[commercial] <- "Commercial Use"
+levels(fire2$PROPERTY_USE_DESC)[infrastructure] <- "Infrastructure"
+levels(fire2$PROPERTY_USE_DESC)[natural] <- "Natural Area"
+levels(fire2$PROPERTY_USE_DESC)[other] <- "Other"
+
+prop_use <- factor(fire2$PROPERTY_USE_DESC)
+levels(prop_use) <- c(1:8)
+prop_use <- factor(prop_use, levels = c(1:8), labels = c("Public Use", "Education", "Police/Doctor", "Residential", "Commercial Use", "Infrastructure", "Natural Area", "Other"))
+
+library(RColorBrewer)
+pal = colorFactor("Set1", domain = prop_use) # Grab a palette
+color1 = pal(prop_use)
+
+content2 <- paste(content, "Property Use:", prop_use, "<br/>")
+
+m2 <- m %>% addCircles(data = fire2, group = "Incidents", color = color1, popup = content2) %>% addLegend("bottomleft", pal = pal, 
+            values = prop_use, title = "Distance Fire Spread")
+m2
+
+```
+
+
+
+## 2B
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+m3 <- leaflet(width = "100%") %>% setView(lat = 40.7128, lng = -74.0060, zoom = 10) %>% addTiles('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png') %>% addCircleMarkers(data = fire2, group = "Incidents", color = color1, popup = content2, clusterOptions = markerClusterOptions()) %>% addLegend("bottomleft", pal = pal, 
+            values = prop_use, title = "Distance Fire Spread") 
+m3
+```
+
+
+
+# Question 3
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+FH_icon <- icons(
+  makeIcon(iconUrl = "/Users/NathanColbert/Downloads/firehouse.png"),
+  iconWidth = 30, iconHeight = 45,
+  iconAnchorX = 1, iconAnchorY = 3
+)
+
+m4 <- m2 %>% addCircles(data = fire2, group = "Incidents", color = color1, popup = content, radius = ~fire2$TOTAL_INCIDENT_DURATION/60) %>%
+addMarkers(data = fh_loc, lat = firehouse$FH_Lat, lng = firehouse$FH_Long,  group = "Firehouses", icon = FH_icon) %>% addLayersControl(
+baseGroups = c("OpenStreetMap"),
+overlayGroups = c("Firehouses", "Incidents"),
+options = layersControlOptions(collapsed = TRUE) )#converted to minutes
+m4
+```
+
+# Question 4 
+
+
+## 4A
+
+I was unable to successfully calculate the closest fire station to each incident and further more the distance between them. I have included my attempts to do so in the RMarkdown file. In order to have something to turn in, I have created a similar plot examining response time by Borough. I know this isnt correct, but I wanted to make an attempt.
+
+```{r, eval=FALSE, include=FALSE}
+library(geosphere)
+library(tidyverse)
+
+
+inc_dist <- fire2[,c("Latitude","Longitude")]
+inc_dist
+station <- fire2 %>% group_by(IM_INCIDENT_KEY) %>% mutate(STATION1 = distGeo(fh_loc[,3:4], fire2[,c("Latitude","Longitude")]))
+station
+
+fire2 %>% group_by(IM_INCIDENT_KEY) %>% summarise(CLOSEST_STATION_DIST = min(distGeo(fh_loc[,3:4], fire2[,c("Latitude","Longitude")]), na.rm = T))
+
+fh_loc %>% group_by(FacilityName) %>% summarise(CLOSEST_STATION_DIST = min(distGeo(fh_loc[,3:4], fire2[,c("Latitude","Longitude")]), na.rm = T))
+
+fire2 %>% group_by(IM_INCIDENT_KEY) %>% mutate(STATION1 = distGeo(fire2[,c("Latitude","Longitude")], fh_loc[1 ,3:4]))
+
+
+fh_loc %>% summarise(dist = distGeo(fh_loc[1,3:4], fire2[1,c("Latitude","Longitude")]), everything())
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+library(lubridate)
+x <- c(as.character(fire2$INCIDENT_DATE_TIME))
+inc_dates <- parse_date_time(x, '%m/%d/%Y %I:%M:%S %p')
+
+y <- c(as.character(fire2$ARRIVAL_DATE_TIME))
+arr_dates <- parse_date_time(y, '%m/%d/%Y %I:%M:%S %p')
+
+
+fire3 <- cbind(fire2, inc_dates, arr_dates)
+fire3 <- fire3 %>% mutate(WAIT_TIME = arr_dates - inc_dates)
+
+WAIT_num <- as.numeric(fire3$WAIT_TIME)
+ggplot(fire3) + geom_point(aes(x = fire3$BOROUGH_DESC, y = WAIT_num / 60, color = fire3$BOROUGH_DESC)) + xlab(NULL) + ylab("Response Time in Minutes") + ggtitle("Response Time by Borough") + theme_tufte() + coord_flip() +theme(legend.position = "none")
+```
+
+Looking at this graph it appears there is the least amount of dispersion in the Bronx and Brooklyn. Not including the outlier of over and hour long response time in Staten Island, Staten Island, Queens, and Manhattan are all similarly dispersed. The slightly longer response time could be due to traffic in Manhattan, or perhaps larger serviceable area in Queens and the Bronx. All in all, the response times through all the boroughs are very similar.
+
+## 4B
+In the graph below the response time per incident is represented by the radius of the circle around the incident. 
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+m5 <- m2 %>% addCircles(data = fire2, group = "Incidents", color = color1, popup = content, radius = ~fire3$WAIT_TIME) %>%
+addMarkers(data = fh_loc, lat = firehouse$FH_Lat, lng = firehouse$FH_Long,  group = "Firehouses", icon = FH_icon) %>% addLayersControl(
+baseGroups = c("OpenStreetMap"),
+overlayGroups = c("Firehouses", "Incidents"),
+options = layersControlOptions(collapsed = TRUE) )
+m5
+```
+

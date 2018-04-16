@@ -1,0 +1,315 @@
+---
+title: "DV Assignment 4 Network Analysis"
+author: "Nathan Colbert"
+output: 
+  html_document:
+    keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(igraph)
+library(ggnetwork)     
+library(intergraph)    
+library(ggrepel)       
+library(svgPanZoom)    
+library(DT)      
+library(ggplot2)
+library(ggraph)
+library(ggthemes)
+library(svgPanZoom)
+
+```
+
+
+# 1. Who follows whom?
+
+## 1A) Network of Followers
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+senate <- read.csv("~/Documents/GitHub/DV_CU_course_material/Exercises/10_twitter_senate/senators_follow.csv")
+
+senate_twitter <- read.csv("~/Documents/GitHub/DV_CU_course_material/Exercises/10_twitter_senate/senators_twitter.csv")
+
+parties <- senate_twitter %>% select(Official.Twitter, Party.affiliation, Senator) %>% rename(source = "Official.Twitter")
+
+parties1 <- parties %>% rename("vertex.names"= source)
+
+
+senate_party <- full_join(senate, parties)
+
+senate_party <- senate_party %>% filter(following == TRUE)
+
+
+set.seed(12345)
+
+#deg <- degree(graph, mode = "in")
+#odeg <- degree(graph, mode = "out")
+
+senate_party <- senate_party %>% filter(source == "SenJeffMerkley" | source == "SenJohnKennedy" | source == "SenMarkey" | source == "SenCollins" | source == "SenJohnMcCain" | source == "lisamurkowski")
+
+  
+graph <- graph_from_data_frame(senate_party[,c("source", "target")],directed=T)
+
+
+
+
+net <- simplify(graph, remove.multiple = F, remove.loops = T) 
+
+colrs <- c("red", "blue")
+
+E(net)$edge.color <- colrs[E(net)$edge.color] 
+
+V(net)$size <- centralization.degree(net)$res
+
+
+#dat<- ggnetwork(net, layout="fruchtermanreingold", 
+#          arrow.gap=0, cell.jitter=0)
+#write.csv(dat, "dat.csv")
+
+cols <- c("Republican Party" = "Dark Red", "Democratic Party" = "Navy",  "Independent" = "Dark Green")
+
+dat <- read.csv("dat.csv")
+
+
+
+
+dat <- full_join(dat, parties1)
+dat <- na.omit(dat)
+ggplot(dat)+  geom_edges(data=dat, 
+             aes(x=x, y=y, xend=xend, yend=yend, color = Party.affiliation, curvature=0.1, alpha=1/2)) +
+  geom_nodes(data=dat,
+             aes(x=x, y=y, xend=xend, yend=yend, size = sqrt(size))) +
+  geom_node_text(aes(label = dat$vertex.names), repel = TRUE, size = 2) +
+  theme_blank() + theme(legend.position = "none") +
+  scale_color_manual(values = cols)
+
+
+``` 
+As mentioned on Piazza, it seems as though the obvious obscurity that comes along with this network even when diluted to just the three highest indegree senators and the three highest out degree senators was part of the point of the exercise. I feel the need to mention that the edge colors match the appropriate party, and the node size varies by centrality -- not that one could easily tell by looking. 
+
+## 1B) Communities
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+library(networkD3)
+
+
+wc <- cluster_walktrap(net)  # find "communities"
+members <- membership(wc)
+g2 <- igraph_to_networkD3(net, group=members)
+
+# Create force directed network plot
+ip1 <- forceNetwork(Links = g2$links, Nodes = g2$nodes, 
+             Source = 'source', Target = 'target', 
+             NodeID = 'name', Group = 'group',
+             charge = -100,linkDistance = 20,
+                  zoom = T, 
+                  opacity = 1,
+                  fontSize=24)
+ip1
+```
+
+There was probably a better kind of graph to use to visualize whether cluster_walktrap captured party alignment. However, I was eager to practice creating a d3 network, and so that is what I have created here. Even though it maybe be a bit less obvious, it is still apparent that the graph captured at least some of the party alignment.
+
+# 2. What are they tweeting about?
+
+## 2A) Most Common Topics over Time
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+library(tidyr)
+library(dplyr)
+library(ggrepel)
+tweets <- readRDS("~/Documents/GitHub/DV_CU_course_material/Exercises/10_twitter_senate/senator_tweets.RDS")
+tw <- tweets %>% filter(is_retweet == FALSE) %>% group_by(created_at) %>% select(hashtags, created_at) %>% filter(hashtags != "NA") 
+tw$ID <- seq.int(nrow(tw))
+
+time <- separate(tw, created_at, c("y", "m", "d", "hour", "minute", "second")) %>% select(y, m, d)
+time$ID <- seq.int(nrow(tw))
+tw <- full_join(tw, time)
+tw <- unnest(tw) %>% group_by(y) %>% count(hashtags)
+t_graph <- tw %>% group_by(y) %>% arrange(desc(y)) %>% arrange(desc(n)) %>% mutate(most_common = max(n)) %>% filter(n == most_common)
+
+ggplot(t_graph, aes(x = y, y = n, group = 1)) + geom_line() + geom_point() + geom_text_repel(aes(label = hashtags), fontface = 'bold', color = 'black', segment.color = 'blue', angle = 45) + theme_tufte() + xlab("Year") + ylab("Frequency") + ggtitle("Most Popular Hashtags Over Time")
+```
+
+To visualize tweets over time, I chose to visualize the most common hashtags over the past 10 years, by year. 
+
+
+## 2B) Democrats VS Republicans
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+tw2 <- tweets %>% filter(is_retweet == FALSE) %>% group_by(created_at) %>% select(hashtags, created_at, screen_name) %>%filter(hashtags != "NA")
+tw2$ID <- seq.int(nrow(tw2))
+time2 <- separate(tw2, created_at, c("y", "m", "d", "hour", "minute", "second")) %>% select(y, m, d)
+time2$ID <- seq.int(nrow(tw2))
+tw2 <- full_join(tw2, time2)
+tw2 <- unnest(tw2)
+
+parties <- rename(parties, screen_name = source)
+tw2 <- full_join(tw2, parties)
+common <- tw2 %>% ungroup() %>% select(y, hashtags, Party.affiliation) %>% group_by(y) %>% count(hashtags) 
+tw2<- full_join(common, tw2)
+repub <- tw2 %>% select(y, hashtags, Party.affiliation, n) %>% filter(Party.affiliation == "Republican Party") %>% group_by(y) %>% mutate(most_common = max(n)) %>%  filter(n == most_common) %>% distinct()
+demo <- tw2 %>% select(y, hashtags, Party.affiliation, n) %>% filter(Party.affiliation == "Democratic Party") %>% group_by(y) %>% mutate(most_common = max(n)) %>%  filter(n == most_common) %>% distinct()
+indy <- tw2 %>% select(y, hashtags, Party.affiliation, n) %>% filter(Party.affiliation == "Independent") %>% group_by(y) %>% mutate(most_common = max(n)) %>%  filter(n == most_common) %>% distinct()
+p2 <- rbind(repub, demo, indy)
+
+
+cols <- c("Republican Party" = "Dark Red", "Democratic Party" = "Navy",  "Independent" = "Dark Green")
+p_graph <- p2 %>% filter(y >= 2013)
+
+ggplot(p_graph, aes(x = y, y = n, group = Party.affiliation)) + geom_line(aes(color = Party.affiliation)) + geom_point() + geom_text_repel(aes(label = hashtags), angle = 45, nudge_y = 200) + theme_tufte() + xlab("Year") + ylab("Frequency") + ggtitle("Most Popular Hashtags Over Time") + facet_wrap(~Party.affiliation, nrow = 3) +  scale_color_manual(values = cols)
+
+```
+
+In order to have representation of all parties I subset the data to only include tweets from the last 5 years. I then plotted it in a similar way as the previous graph and facet wrapped the graphs by party. 
+
+
+## 2C) Gun Control I - Dems vs. Reps
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+# Find more hashtags, change colors in graph
+hash <- c("NeverAgain", "guncontrol", "guncontrolnow", "Enough", "2ndamendment", "NRA", "liberals", "gunsense", "gunsafety", "firearms", "carry", "guns")
+
+tw3 <- tweets %>% filter(is_retweet == FALSE) %>% group_by(created_at) %>% select(hashtags, created_at, screen_name) %>%filter(hashtags != "NA")
+tw3$ID <- seq.int(nrow(tw3))
+time3 <- separate(tw3, created_at, c("y", "m", "d", "hour", "minute", "second")) %>% select(y, m, d)
+time3$ID <- seq.int(nrow(tw3))
+tw3 <- full_join(tw3, time3)
+tw3 <- unnest(tw3)
+tw3 <- full_join(tw3, parties)
+gun <- tw3 %>% filter(hashtags %in% hash) %>% group_by(Party.affiliation) %>% filter(Party.affiliation!= "NA" & Party.affiliation != "Independent")
+
+ggplot(gun) + geom_bar(aes(x = hashtags, fill = Party.affiliation), position = "dodge") + theme_tufte()+ ylab("Count") + xlab("Hashtag") + ggtitle("Gun Control Hashtags")+ scale_fill_manual(values = cols, name = "Party Affiliation") 
+```
+
+
+## 2D) Gun Control II - Parkland Shooting
+
+I couldn't decide which way was best to present this information, so I created several. I decided to look at twitter communication following the attack starting the day after (February 15th) and ending at the end of the month. I figured this could be a good way to capture any sentiment. I then chose to rename the hashtags: "StonemanShooting, stonemanshooting, Parkland, FloridaSchoolShooting, GunReformNow, ParklandShooting" as a group to be "Parkland Shooting," and I renamed all other hashtags "other."  I then created two faceted graphs demonstrating how often the "Parkland Shooting" group was used in a hashtag in relation to the "other" category, one for each party. As is apparent, in comparison to eveything else that was tweeted about, the Parkland Shooting was very infrequently referenced. To further demonstrate this point I provided a word cloud showing the 100 most frequent hashtags from February 15th to the end of the month. This shows that dreamers, daca, immigration, and the olympics, were perhaps more prevalently portrayed via these senators twitter hashtags.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+tw4 <- tweets %>% group_by(created_at) %>% select(-c(15:42), -status_id, - user_id, -reply_to_user_id, - reply_to_screen_name, - reply_to_status_id )
+tw4$ID <- seq.int(nrow(tw4))
+time4 <- separate(tw4, created_at, c("y", "m", "d", "hour", "minute", "second")) %>% select(y, m, d)
+time4$ID <- seq.int(nrow(tw4))
+tw4 <- full_join(tw4, time4)
+tw4 <- unnest(tw4)
+tw4 <- full_join(tw4, parties)
+tw4$m <- as.integer(tw4$m)
+tw4$d <- as.integer(tw4$d)
+tw4 <- tw4 %>% filter(y == 2018) %>% filter(m == 2, d >= 14 ) %>% filter(Party.affiliation != "NA")
+tw4 <- separate(tw4, Senator, c("Last_Name", "First_Name"), sep = ",")
+tw_tweet <- tw4 %>% filter(hashtags != "StonemanShooting" & hashtags != "stonemanshooting" & hashtags != "Parkland" & hashtags != "FloridaSchoolShooting"& hashtags != "GunReformNow" & hashtags != "ParklandShooting") %>% mutate(hashtag2 = "Other")
+
+tw_tweet2 <- tw4 %>% filter(hashtags == "StonemanShooting" | hashtags == "stonemanshooting" | hashtags == "Parkland" | hashtags == "FloridaSchoolShooting"| hashtags == "GunReformNow" | hashtags == "ParklandShooting") %>% mutate(hashtag2 = "Parkland Shooting")
+
+
+tw_comp <- rbind(tw_tweet, tw_tweet2)
+
+
+
+demo2 <- tw_comp %>% filter(Party.affiliation == "Democratic Party")
+rep2 <- tw_comp %>% filter(Party.affiliation == "Republican Party")
+indy2 <- tw_comp %>% filter(Party.affiliation == "Independent")
+ggplot(demo2, aes(x = d)) + geom_bar(fill = "Navy")  + theme_tufte() + xlab("Day of the Month in February") + ylab("Number of Tweets") + ggtitle("Twitter Response to the Parkland Shooting by Democratic Senators" ) + facet_wrap(~hashtag2)
+ggplot(rep2, aes(x = d)) + geom_bar(fill = "Dark Red")  + theme_tufte() + xlab("Republican Party Senator") + ylab("Number of Tweets") + ggtitle("Twitter Response to the Parkland Shooting by Republican Senators" )+ facet_wrap(~hashtag2)
+
+
+
+
+library(wordcloud) 
+wordcloud(tw_comp$hashtags, max.words = 100)
+#StonemanShooting #stonemanshooting 
+```
+
+
+
+# 3. Are you talking to me?
+
+
+## 3A) Identifying Re-Tweets
+
+For this question, I created a simple percentage barchart based on how often a given senator retweets his or her given party or their opposite. In order to more clearly illustrate this, I chose to make two graphs, one for Republicans and one for Democrats, instead of faceting. 
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+retw <- tweets %>% filter(is_retweet == TRUE)
+test <- gsub(pattern = "[[:blank:]]", replacement = "", retw$text) 
+
+retw_list <- strsplit(test, split = ":")
+
+retw_list <- lapply(retw_list, `[[`, 1)
+
+retw_list <- gsub(pattern = "\\RT@", "", retw_list)
+
+retw_text <- unlist(retw_list)
+
+retw <- retw %>% mutate(retweeted = retw_text)
+
+retw<- retw %>% group_by(created_at) %>% select(-c(15:42), -status_id, - user_id, -reply_to_user_id, - reply_to_screen_name, - reply_to_status_id , - is_quote, - favorite_count, -source, -is_retweet, - hashtags)
+
+retw  <- retw%>% filter(screen_name != retweeted)
+
+senators <- retw %>% group_by(screen_name) %>% select(screen_name) %>% distinct()
+
+retw <- full_join(retw, parties)
+
+non_sen <- intersect(retw$retweeted, retw$screen_name)
+
+for(i in 1:NROW(retw)){
+if (retw$retweeted[i] %in% non_sen == TRUE) {
+  retw$retweeted[i] = retw$retweeted[i]
+
+} else {
+  retw$retweeted[i] = NA
+} 
+}
+retw <- retw %>% na.omit()
+parties2 <- parties %>% rename("retweeted" = screen_name)
+retw <- full_join(retw, parties2, by = "retweeted")
+retw_graph <- retw %>% group_by(Party.affiliation.y) %>%filter(Party.affiliation.y != "NA" & Party.affiliation.y != "Independent") %>%filter(Party.affiliation.x != "NA" & Party.affiliation.x != "Independent") %>% na.omit()
+retw_demo <- retw_graph %>% filter(Party.affiliation.x =="Democratic Party")
+retw_rep <- retw_graph %>% filter(Party.affiliation.x == "Republican Party")
+
+ggplot(retw_demo, aes(x = Senator.x, fill = Party.affiliation.y)) + geom_bar(position = "fill")  + coord_flip() + theme_tufte() + scale_fill_manual(values = cols, name = "Party Affiliation of the 'Retweet'") + ggtitle("Democratic Retweet Habits") + xlab("Democratic Senator") + ylab("Proportion of Retweets to Party Affiliation")
+
+ggplot(retw_rep, aes(x = Senator.x, fill = Party.affiliation.y)) + geom_bar(position = "fill") + coord_flip() + theme_tufte() + scale_fill_manual(values = cols, name = "Party Affiliation of the 'Retweet'") +ggtitle("Republican Retweet Habits")+ xlab("Republican Senator") + ylab("Proportion of Retweets to Party Affiliation")
+
+```
+
+## 3B) Identifying Mentions
+
+Im not sure exactly what happened here. I had a very difficult time getting the graph to do what I wanted! 
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+
+
+#tweets3b <- tweets %>% filter(is_retweet == FALSE) %>% select(mentions_screen_name, screen_name)
+#tweets3b <- unnest(tweets3b) %>% na.omit()
+#twg <- graph_from_data_frame(tweets3b, directed = F)
+#nettwg <- simplify(twg, remove.multiple = F, remove.loops = T)
+#V(nettwg)$size <- centralization.degree(nettwg)$res
+
+
+#dat2<- ggnetwork(nettwg, layout="fruchtermanreingold", 
+#          arrow.gap=0, cell.jitter=0)
+#write.csv(dat2, "dat2.csv")
+
+
+dat2 <- read.csv("dat2.csv")
+
+
+
+
+dat2 <- full_join(dat2, parties1)
+dat2 <- na.omit(dat2)
+
+
+ggplot(dat2)+  geom_edges(data=dat2, 
+             aes(x=x, y=y, xend=xend, yend=yend, color = Party.affiliation, curvature=0.1, alpha=1/2)) +
+  geom_nodes(data=dat2,
+             aes(x=x, y=y, xend=xend, yend=yend, size = sqrt(size))) +
+  theme_blank() +
+  scale_color_manual(values = cols)
+
+```

@@ -1,0 +1,1716 @@
+---
+title: "DVFP Process"
+author: "Nathan Colbert"
+date: "4/25/2018"
+output:
+  html_document:
+    toc: TRUE
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    css: "DVFPCSS.css"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tuneR)
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+library(data.table)
+```
+
+# A Review of Romantic Composers
+
+## The idea
+
+When this project was proposed I was immediately positive I wanted to try to base my project around visually depicting harmony in music. I have seen plenty of comparisons of musical artists and songs, but very few that concern harmony. More specifically, I decided to compare composers to one another. To further narrow the scope, I pondered what time period had a large amount of active composers, but also fostered different stylistic leanings. From this, it became clear that the romantic era was ideal. The classical era has plenty of active composers, but overall was quite a bit more harmonically homogeneous than the romantic era. Furthermore, the more modern classical music becomes in the post-romantic era the less focus on harmony as defined in this project (a lot of composers move toward minimalism, twelvetone rows, atonal music, aleoric chance, computer music, etc.). Excited by this idea, the first major hurdle was finding data that would support visualizations of this type.
+
+
+## The Data
+
+After scouring the internet, there seemed to be very few data sources that either focused on harmony in the way that I wanted to, or had the scope of composers I was interested in comparing. However, I did discover that nearly every composer had multiple midi files associated with their compositions. Midi files could best be explained as a file that has the locations of pitches mapped such that they could be read by a computer. It is critical to note the distinction between this and audio. Midi has no inherent sound, it simply represents the locations of pitches in time and tone that can then be __assigned__ to a sound. I decided this was a good path of approach and began to decipher what needed to happen to make this data useable. 
+
+Raw midi data looks like this:
+
+```{r, echo = FALSE, class.source='long'}
+rach_5 <- readMidi("Midi/Rach23n5.mid")
+library(DT)
+datatable(rach_5)
+```
+
+After trying for sometime to decipher how to turn this into pitch information that I could use to discuss harmony, I wondered if perhaps someone had already worked on this. I then discovered a life saving package called "tuneR." Using the function getMidiNotes(), I was able to convert the previous data into this:
+
+```{r, echo =FALSE, class.source='long' }
+rach_5 <- getMidiNotes(rach_5)
+library(DT)
+datatable(rach_5)
+```
+
+At this point, I stopped assuming I had found all the answers I needed.
+
+__I__ __WAS__ __VERY__ __WRONG__.
+
+
+## Preprocessing and a Brief Lesson on Music Theory
+
+A few weeks later I decided I would get a little work done on my project, throw a few graphs together, make some basic plots etc. This was when I realized the scope of the data processing ahead. Recall my initial idea: studying harmonic variation among romantic-era composers. For those who know little about music, harmony can be thought of the cooccurence of pitches that when combined form a chord. This chord can then be labeled and then studied based on the transistions between it and its neighbor. This we would call harmonic movement. More specifically the relationships have been codified (for nearly 500 years), and all have names. One important kind of relationship to review for comprehension of this project is called a cadence. You can think of a cadence as the final part of a phrase that lets you know where the music is heading. Similar to punctuation in a sentence, a cadence could function like a period -- suggesting finality, the conclusion of an idea, or it could function like a comma -- suggesting, we're not quite there yet, there is more to come! The most important cadence in western classical music is called an authentic cadence. It comes in two types, perfect and imperfect. You can imagine the difference between these two as one (perfect) being a stronger resolution than the other (imperfect). In either case (though not 100% of the time), these authentic cadences revolve around the movement from a dominant chord (labeled with the roman numeral V), to the tonic chord (labeled roman numeral I or i (if in a minor key)). 
+
+That is all I will elaborate on for now. I will return to theory as needed as we go. 
+
+Perhaps, you have now identified the problem ahead: I have all of the notes as the occur in time, but I do not have their combinations (chords).
+First approach: Use dplyr to group notes in a give time period.
+
+```{r}
+test <- rach_5 %>% group_by(time) %>% arrange(notename) %>%
+  summarise(chord = paste(unique(na.omit(notename)), 
+                               collapse = ", "))
+head(test, n = 10)
+```
+Enter: problem number 2.
+
+Looking above, I have successfully identified notes that occur in time together and combined them. However, looking closer you'll notice that the notes are capitalized differently and have different punctuation following them. In the midi language, this punctuation is used to illustrate the octave in which the pitch occurs. A capital letter with a comma (G,) is higher than one without (G), whereas a lowercase letter is always lower than the capital letter moving by octaves with appostrophes in the other direction (g'' is lower than g'). In harmonic analysis, we're not too concerned with octave. It matters for something called chord inversions, but for simplicities sake, inversions will be ignored in this project. 
+
+Next step: normalize the octaves.
+```{r, class.source='long'}
+chords <- rach_5 %>% group_by(time) %>% 
+  summarise(chord = paste(notename, collapse = ", ")) 
+
+rach_5_full <- full_join(rach_5, chords)
+
+rach_5_full$note <- as.numeric(rach_5_full$note)
+
+## Normalizing Octave Loop
+
+for (i in 1:nrow(rach_5_full)){
+  if (rach_5_full$note[i] > 12){
+    rach_5_full$note[i] = rach_5_full$note[i] - 12
+  }
+}
+for (i in 1:nrow(rach_5_full)){
+  if (rach_5_full$note[i] > 12){
+    rach_5_full$note[i] = rach_5_full$note[i] - 12  # Normalize the value of 'note' to one octave
+  }
+}
+for (i in 1:nrow(rach_5_full)){
+  if (rach_5_full$note[i] > 12){
+    rach_5_full$note[i] = rach_5_full$note[i] - 12 # There is probably a more elegant solution here.
+  }
+}
+for (i in 1:nrow(rach_5_full)){
+  if (rach_5_full$note[i] > 12){
+    rach_5_full$note[i] = rach_5_full$note[i] - 12
+  }
+}
+for (i in 1:nrow(rach_5_full)){
+  if (rach_5_full$note[i] > 12){
+    rach_5_full$note[i] = rach_5_full$note[i] - 12
+  }
+}
+for (i in 1:nrow(rach_5_full)){
+  if (rach_5_full$note[i] > 12){
+    rach_5_full$note[i] = rach_5_full$note[i] - 12
+  }
+}
+for (i in 1:nrow(rach_5_full)){
+  if (rach_5_full$note[i] > 12){
+    rach_5_full$note[i] = rach_5_full$note[i] - 12
+  }
+}
+```
+
+Now that the octaves have been normalized, we can assign note values to each level, and combine to form chords.
+
+```{r}
+notes <- c("C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", 
+           "G", "G#/Ab", "A", "A#/Bb", "B", "C")
+
+rach_5_full$note_norm <- factor(rach_5_full$note, levels = 1:12, labels = notes)
+
+test <- rach_5_full %>% group_by(time) %>% arrange(note_norm)
+
+
+
+chord_norm <- test %>% group_by(time) %>%
+  summarise(chord_norm = paste(unique(na.omit(note_norm)), 
+                               collapse = ", "),
+            chord_norm_num = paste(sum(na.omit(unique(note)))))
+rach_5_full <- full_join(rach_5_full, chord_norm)
+
+r5 <- rach_5_full
+```
+
+In the final project, all of the above steps happen in the "MidiTransform.R" script.
+
+The resulting chords looks like this:
+
+```{r, echo = FALSE}
+r5 %>% select(chord_norm) %>% head(n = 10)
+```
+
+Now all of the chords are formed but unnamed. It should also be noted that getting to this step was not nearly as logical as it is laid out here. I struggled for a while getting the notes into a consistent order, and getting everything to coalesce the way I wanted. 
+
+I won't go into how chords are named, but those who are interested can look here: https://en.wikipedia.org/wiki/Chord_(music)
+This link also explains roman numeral analysis (which I will explain briefly), a critical component of this project.
+
+After much debate and troubleshooting, I ultimately had to name the chords in a somewhat brute force fashion using the following loop.
+
+```{r, class.source='long'}
+### Chord Names for loop
+
+
+# notes <- c("C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B", "C")
+for (i in 1:nrow(r5)){      # Major Minor Aug (only 4) Dim Maj7 Min7 Dom7 halfdim7 fulldim7 (only 3 : include note) complete 
+  if (r5$chord_norm[i] == c("C#/Db, F, G#/Ab")){ 
+    r5$chord_named[i] = "C#/Dbmaj"                     
+  } else if (r5$chord_norm[i] == c("D, F#/Gb, A")){ 
+    r5$chord_named[i] = "Dmaj" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, G, A#/Bb")){ 
+    r5$chord_named[i] = "D#/Ebmaj" 
+  } else if (r5$chord_norm[i] == c("E, G#/Ab, B")){ 
+    r5$chord_named[i] = "Emaj" 
+  } else if (r5$chord_norm[i] == c("F, A, C")){ 
+    r5$chord_named[i] = "Fmaj" 
+  } else if (r5$chord_norm[i] == c("C#/Db, F#/Gb, A#/Bb")){ #flips here
+    r5$chord_named[i] = "F#/Gbmaj" 
+  } else if (r5$chord_norm[i] == c("D, G, B")){ 
+    r5$chord_named[i] = "Gmaj" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, G#/Ab, C")){ 
+    r5$chord_named[i] = "G#/Abmaj" 
+  } else if (r5$chord_norm[i] == c("C#/Db, E, A")){ 
+    r5$chord_named[i] = "Amaj" 
+  } else if (r5$chord_norm[i] == c("D, F, A#/Bb")){ 
+    r5$chord_named[i] = "A#/Bbmaj" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, B")){ 
+    r5$chord_named[i] = "Bmaj" 
+  } else if (r5$chord_norm[i] == c("E, G, C")){ 
+    r5$chord_named[i] = "Cmaj"
+  } else if (r5$chord_norm[i] == c("C#/Db, E, G#/Ab")){  #minor starts here
+    r5$chord_named[i] = "C#/Dbmin" 
+  } else if (r5$chord_norm[i] == c("D, F, A")){ 
+    r5$chord_named[i] = "Dmin" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, A#/Bb")){ 
+    r5$chord_named[i] = "D#/Ebmin" 
+  } else if (r5$chord_norm[i] == c("E, G, B")){ 
+    r5$chord_named[i] = "Emin" 
+  } else if (r5$chord_norm[i] == c("F, G#/Ab, C")){ 
+    r5$chord_named[i] = "Fmin" 
+  } else if (r5$chord_norm[i] == c("C#/Db, F#/Gb, A")){ #flips here
+    r5$chord_named[i] = "F#/Gbmin" 
+  } else if (r5$chord_norm[i] == c("D, G, A#/Bb")){ 
+    r5$chord_named[i] = "Gmin" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, G#/Ab, B")){ 
+    r5$chord_named[i] = "G#/Abmin" 
+  } else if (r5$chord_norm[i] == c("E, A, C")){ 
+    r5$chord_named[i] = "Amin" 
+  } else if (r5$chord_norm[i] == c("C#/Db, F, A#/Bb")){ #flips here again
+    r5$chord_named[i] = "A#/Bbmin" 
+  } else if (r5$chord_norm[i] == c("D, F#/Gb, B")){ 
+    r5$chord_named[i] = "Bmin" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, G, C")){ 
+    r5$chord_named[i] = "Cmin"
+  }  else if (r5$chord_norm[i] == c("C#/Db, E, G")){  #diminished starts here
+    r5$chord_named[i] = "C#/Dbdim" 
+  } else if (r5$chord_norm[i] == c("D, F, G#/Ab")){ 
+    r5$chord_named[i] = "Ddim" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, A")){ 
+    r5$chord_named[i] = "D#/Ebdim" 
+  } else if (r5$chord_norm[i] == c("E, G, A#/Bb")){ 
+    r5$chord_named[i] = "Edim" 
+  } else if (r5$chord_norm[i] == c("F, G#/Ab, B")){ 
+    r5$chord_named[i] = "Fdim" 
+  } else if (r5$chord_norm[i] == c("F#/Gb, A, C")){ #flips here
+    r5$chord_named[i] = "F#/Gbdim" 
+  } else if (r5$chord_norm[i] == c("C#/Db, G, A#/Bb")){ 
+    r5$chord_named[i] = "Gdim" 
+  } else if (r5$chord_norm[i] == c("D, G#/Ab, B")){ 
+    r5$chord_named[i] = "G#/Abdim" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, A, C")){ 
+    r5$chord_named[i] = "Adim" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, E, A#/Bb")){ #flips again here
+    r5$chord_named[i] = "A#/Bbdim" 
+  } else if (r5$chord_norm[i] == c("D, F, B")){ 
+    r5$chord_named[i] = "Bdim" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, C")){ 
+    r5$chord_named[i] = "Cdim"
+  } else if (r5$chord_norm[i] == c("C#/Db, F, A")){  #augmented starts here
+    r5$chord_named[i] = "C#/Dbaug, Faug, Aaug" 
+  } else if (r5$chord_norm[i] == c("D, F#/Gb, A#/Bb")){ 
+    r5$chord_named[i] = "Daug, F#/Gbaug, A#/Bb, aug" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, G, B")){ 
+    r5$chord_named[i] = "D#/Ebaug, Gaug, Baug" 
+  } else if (r5$chord_norm[i] == c("E, G#/Ab, C")){ 
+    r5$chord_named[i] = "Eaug, G#/Abaug, Caug" 
+  } else if (r5$chord_norm[i] == c("C#/Db, F, G#/Ab, C")){ #maj7 starts here
+    r5$chord_named[i] = "C#/Dbmaj7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, D, F#/Gb, A")){ 
+    r5$chord_named[i] = "Dmaj7" 
+  } else if (r5$chord_norm[i] == c("D, D#/Eb, G, A#/Bb")){ 
+    r5$chord_named[i] = "D#/Ebmaj7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, E, G#/Ab, B")){ 
+    r5$chord_named[i] = "Emaj7" 
+  } else if (r5$chord_norm[i] == c("E, F, A, C")){ 
+    r5$chord_named[i] = "Fmaj7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, F, F#/Gb, A#/Bb")){ #flips here
+    r5$chord_named[i] = "F#/Gbmaj7" 
+  } else if (r5$chord_norm[i] == c("D, F#/Gb, G, B")){ 
+    r5$chord_named[i] = "Gmaj7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, G, G#/Ab, C")){ 
+    r5$chord_named[i] = "G#/Abmaj7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, E, G#/Ab, A")){ #flips here again
+    r5$chord_named[i] = "Amaj7" 
+  } else if (r5$chord_norm[i] == c("D, F, A, A#/Bb")){ 
+    r5$chord_named[i] = "A#/Bbmaj7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, A#/Bb, B")){ 
+    r5$chord_named[i] = "Bmaj7" 
+  } else if (r5$chord_norm[i] == c("E, G, B, C")){ 
+    r5$chord_named[i] = "Cmaj7"
+  } else if (r5$chord_norm[i] == c("C#/Db, F, G#/Ab, B")){ #dom7 starts here
+    r5$chord_named[i] = "C#/Dbdom7" 
+  } else if (r5$chord_norm[i] == c("D, F#/Gb, A, C")){ 
+    r5$chord_named[i] = "Ddom7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, D#/Eb, G, A#/Bb")){ #flips here
+    r5$chord_named[i] = "D#/Ebdom7" 
+  } else if (r5$chord_norm[i] == c("D, E, G#/Ab, B")){ 
+    r5$chord_named[i] = "Edom7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F, A, C")){ 
+    r5$chord_named[i] = "Fdom7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, E, F#/Gb, A#/Bb")){ #flips here again 
+    r5$chord_named[i] = "F#/Gbdom7" 
+  } else if (r5$chord_norm[i] == c("D, F, G, B")){ 
+    r5$chord_named[i] = "Gdom7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, G#/Ab, C")){ 
+    r5$chord_named[i] = "G#/Abdom7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, E, G, A")){ #flips here again
+    r5$chord_named[i] = "Adom7" 
+  } else if (r5$chord_norm[i] == c("D, F, G#/Ab, A#/Bb")){ 
+    r5$chord_named[i] = "A#/Bbdom7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, A, B")){ 
+    r5$chord_named[i] = "Bdom7" 
+  } else if (r5$chord_norm[i] == c("E, G, A#/Bb, C")){ 
+    r5$chord_named[i] = "Cdom7"
+  } else if (r5$chord_norm[i] == c("C#/Db, E, G#/Ab, B")){ #min7 starts here
+    r5$chord_named[i] = "C#/Dbmin7" 
+  } else if (r5$chord_norm[i] == c("D, F, A, C")){ 
+    r5$chord_named[i] = "Dmin7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, D#/Eb, F#/Gb, A#/Bb")){ #flips here
+    r5$chord_named[i] = "D#/Ebmin7" 
+  } else if (r5$chord_norm[i] == c("D, E, G, B")){ 
+    r5$chord_named[i] = "Emin7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F, G#/Ab, C")){ 
+    r5$chord_named[i] = "Fmin7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, E, F#/Gb, A")){ #flips here again
+    r5$chord_named[i] = "F#/Gbmin7" 
+  } else if (r5$chord_norm[i] == c("D, F, G, A#/Bb")){ 
+    r5$chord_named[i] = "Gmin7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, G#/Ab, B")){ 
+    r5$chord_named[i] = "G#/Abmin7" 
+  } else if (r5$chord_norm[i] == c("E, G, A, C")){ 
+    r5$chord_named[i] = "Amin7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, F, G#/Ab, A#/Bb")){ #flips here again
+    r5$chord_named[i] = "A#/Bbmin7" 
+  } else if (r5$chord_norm[i] == c("D, F#/Gb, A, B")){ 
+    r5$chord_named[i] = "Bmin7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, G, A#/Bb, C")){ 
+    r5$chord_named[i] = "Cmin7"
+  } else if (r5$chord_norm[i] == c("C#/Db, E, G, B")){ #halfdim7 starts here
+    r5$chord_named[i] = "C#/Dbhalfdim7" 
+  } else if (r5$chord_norm[i] == c("D, F, G#/Ab, C")){ 
+    r5$chord_named[i] = "Dhalfdim7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, D#/Eb, F#/Gb, A")){ #flips here
+    r5$chord_named[i] = "D#/Ebhalfdim7" 
+  } else if (r5$chord_norm[i] == c("D, E, G, A#/Bb")){ 
+    r5$chord_named[i] = "Ehalfdim7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F, G#/Ab, B")){ 
+    r5$chord_named[i] = "Fhalfdim7" 
+  } else if (r5$chord_norm[i] == c("E, F#/Gb, A, C")){ 
+    r5$chord_named[i] = "F#/Gbhalfdim7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, F, G, A#/Bb")){ #flips here again
+    r5$chord_named[i] = "Ghalfdim7" 
+  } else if (r5$chord_norm[i] == c("D, F#/Gb, G#/Ab, B")){ 
+    r5$chord_named[i] = "G#/Abhalfdim7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, G, A, C")){ 
+    r5$chord_named[i] = "Ahalfdim7" 
+  } else if (r5$chord_norm[i] == c("C#/Db, E, G#/Ab, A#/Bb")){ #flips here again
+    r5$chord_named[i] = "A#/Bbhalfdim7" 
+  } else if (r5$chord_norm[i] == c("D, F, A, B")){ 
+    r5$chord_named[i] = "Bhalfdim7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, A#/Bb, C")){ 
+    r5$chord_named[i] = "Chalfdim7"
+  } else if (r5$chord_norm[i] == c("C#/Db, E, G, A#/Bb")){ #fulldim7 starts here
+    r5$chord_named[i] = "C#/Db, E, G, A#/Bb - fulldim7" 
+  } else if (r5$chord_norm[i] == c("D, F, G#/Ab, B")){ 
+    r5$chord_named[i] = "D, F, G#/Ab, B - fulldim7" 
+  } else if (r5$chord_norm[i] == c("D#/Eb, F#/Gb, A, C")){ 
+    r5$chord_named[i] = "D#/Eb, F#/Gb, A, C - fulldim7" 
+  } else {
+    r5$chord_named[i] = NA
+  }
+}
+
+print("Chords Done")
+```
+
+This loop took forever to write, but saved a considerable amount of time in the future. 
+At this point the chords have been named, but are not usuable. The main issue here is that, going forward, as I enter more pieces, each piece is going to be in a different key and each different key is going to have a different prevalence of certain chords in it. I decided I had to transpose all of the chords to a consistent key so that, going forward, I would be able to compare pieces more efficiently. If you aren't positive what transposition it is, it is somewhat similar to normalizing variables so that they can be compared on the same scale. 
+
+```{r, class.source='long'}
+# take key num and add appropriate amount to transpose to C, here key is G minor (7) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 5
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12 # Reduce any notes that are outside of the range, 
+  } else {                                # back to within the octave
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+  
+# get transposed note names
+
+r5$tran_note <- factor(r5$tran_note, levels = 1:12, labels = notes)
+
+# get transposed chord names
+
+test2 <- r5 %>% group_by(time) %>% arrange(tran_note)
+
+tran_chord <- test2 %>% group_by(time) %>%
+  summarise(tran_chord = paste(unique(na.omit(tran_note)), 
+                               collapse = ", "))
+
+r5 <- full_join(r5, tran_chord, by = "time")  
+
+
+
+### Transposed Chord Name for loop
+
+### Now for transposed chords
+
+for (i in 1:nrow(r5)){      # Major Minor Aug (only 4) Dim Maj7 Min7 Dom7 halfdim7 fulldim7 (only 3 : include note) complete 
+  if (r5$tran_chord[i] == c("C#/Db, F, G#/Ab")){ 
+    r5$tran_chord_named[i] = "C#/Dbmaj"                        
+  } else if (r5$tran_chord[i] == c("D, F#/Gb, A")){ 
+    r5$tran_chord_named[i] = "Dmaj" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, G, A#/Bb")){ 
+    r5$tran_chord_named[i] = "D#/Ebmaj" 
+  } else if (r5$tran_chord[i] == c("E, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "Emaj" 
+  } else if (r5$tran_chord[i] == c("F, A, C")){ 
+    r5$tran_chord_named[i] = "Fmaj" 
+  } else if (r5$tran_chord[i] == c("C#/Db, F#/Gb, A#/Bb")){ #flips here
+    r5$tran_chord_named[i] = "F#/Gbmaj" 
+  } else if (r5$tran_chord[i] == c("D, G, B")){ 
+    r5$tran_chord_named[i] = "Gmaj" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, G#/Ab, C")){ 
+    r5$tran_chord_named[i] = "G#/Abmaj" 
+  } else if (r5$tran_chord[i] == c("C#/Db, E, A")){ 
+    r5$tran_chord_named[i] = "Amaj" 
+  } else if (r5$tran_chord[i] == c("D, F, A#/Bb")){ 
+    r5$tran_chord_named[i] = "A#/Bbmaj" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, B")){ 
+    r5$tran_chord_named[i] = "Bmaj" 
+  } else if (r5$tran_chord[i] == c("E, G, C")){ 
+    r5$tran_chord_named[i] = "Cmaj"
+  } else if (r5$tran_chord[i] == c("C#/Db, E, G#/Ab")){  #minor starts here
+    r5$tran_chord_named[i] = "C#/Dbmin" 
+  } else if (r5$tran_chord[i] == c("D, F, A")){ 
+    r5$tran_chord_named[i] = "Dmin" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, A#/Bb")){ 
+    r5$tran_chord_named[i] = "D#/Ebmin" 
+  } else if (r5$tran_chord[i] == c("E, G, B")){ 
+    r5$tran_chord_named[i] = "Emin" 
+  } else if (r5$tran_chord[i] == c("F, G#/Ab, C")){ 
+    r5$tran_chord_named[i] = "Fmin" 
+  } else if (r5$tran_chord[i] == c("C#/Db, F#/Gb, A")){ #flips here
+    r5$tran_chord_named[i] = "F#/Gbmin" 
+  } else if (r5$tran_chord[i] == c("D, G, A#/Bb")){ 
+    r5$tran_chord_named[i] = "Gmin" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "G#/Abmin" 
+  } else if (r5$tran_chord[i] == c("E, A, C")){ 
+    r5$tran_chord_named[i] = "Amin" 
+  } else if (r5$tran_chord[i] == c("C#/Db, F, A#/Bb")){ #flips here again
+    r5$tran_chord_named[i] = "A#/Bbmin" 
+  } else if (r5$tran_chord[i] == c("D, F#/Gb, B")){ 
+    r5$tran_chord_named[i] = "Bmin" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, G, C")){ 
+    r5$tran_chord_named[i] = "Cmin"
+  }  else if (r5$tran_chord[i] == c("C#/Db, E, G")){  #diminished starts here
+    r5$tran_chord_named[i] = "C#/Dbdim" 
+  } else if (r5$tran_chord[i] == c("D, F, G#/Ab")){ 
+    r5$tran_chord_named[i] = "Ddim" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, A")){ 
+    r5$tran_chord_named[i] = "D#/Ebdim" 
+  } else if (r5$tran_chord[i] == c("E, G, A#/Bb")){ 
+    r5$tran_chord_named[i] = "Edim" 
+  } else if (r5$tran_chord[i] == c("F, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "Fdim" 
+  } else if (r5$tran_chord[i] == c("F#/Gb, A, C")){ #flips here
+    r5$tran_chord_named[i] = "F#/Gbdim" 
+  } else if (r5$tran_chord[i] == c("C#/Db, G, A#/Bb")){ 
+    r5$tran_chord_named[i] = "Gdim" 
+  } else if (r5$tran_chord[i] == c("D, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "G#/Abdim" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, A, C")){ 
+    r5$tran_chord_named[i] = "Adim" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, E, A#/Bb")){ #flips again here
+    r5$tran_chord_named[i] = "A#/Bbdim" 
+  } else if (r5$tran_chord[i] == c("D, F, B")){ 
+    r5$tran_chord_named[i] = "Bdim" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, C")){ 
+    r5$tran_chord_named[i] = "Cdim"
+  } else if (r5$tran_chord[i] == c("C#/Db, F, A")){  #augmented starts here
+    r5$tran_chord_named[i] = "C#/Dbaug, Faug, Aaug" 
+  } else if (r5$tran_chord[i] == c("D, F#/Gb, A#/Bb")){ 
+    r5$tran_chord_named[i] = "Daug, F#/Gbaug, A#/Bb, aug" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, G, B")){ 
+    r5$tran_chord_named[i] = "D#/Ebaug, Gaug, Baug" 
+  } else if (r5$tran_chord[i] == c("E, G#/Ab, C")){ 
+    r5$tran_chord_named[i] = "Eaug, G#/Abaug, Caug" 
+  } else if (r5$tran_chord[i] == c("C#/Db, F, G#/Ab, C")){ #maj7 starts here
+    r5$tran_chord_named[i] = "C#/Dbmaj7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, D, F#/Gb, A")){ 
+    r5$tran_chord_named[i] = "Dmaj7" 
+  } else if (r5$tran_chord[i] == c("D, D#/Eb, G, A#/Bb")){ 
+    r5$tran_chord_named[i] = "D#/Ebmaj7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, E, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "Emaj7" 
+  } else if (r5$tran_chord[i] == c("E, F, A, C")){ 
+    r5$tran_chord_named[i] = "Fmaj7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, F, F#/Gb, A#/Bb")){ #flips here
+    r5$tran_chord_named[i] = "F#/Gbmaj7" 
+  } else if (r5$tran_chord[i] == c("D, F#/Gb, G, B")){ 
+    r5$tran_chord_named[i] = "Gmaj7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, G, G#/Ab, C")){ 
+    r5$tran_chord_named[i] = "G#/Abmaj7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, E, G#/Ab, A")){ #flips here again
+    r5$tran_chord_named[i] = "Amaj7" 
+  } else if (r5$tran_chord[i] == c("D, F, A, A#/Bb")){ 
+    r5$tran_chord_named[i] = "A#/Bbmaj7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, A#/Bb, B")){ 
+    r5$tran_chord_named[i] = "Bmaj7" 
+  } else if (r5$tran_chord[i] == c("E, G, B, C")){ 
+    r5$tran_chord_named[i] = "Cmaj7"
+  } else if (r5$tran_chord[i] == c("C#/Db, F, G#/Ab, B")){ #dom7 starts here
+    r5$tran_chord_named[i] = "C#/Dbdom7" 
+  } else if (r5$tran_chord[i] == c("D, F#/Gb, A, C")){ 
+    r5$tran_chord_named[i] = "Ddom7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, D#/Eb, G, A#/Bb")){ #flips here
+    r5$tran_chord_named[i] = "D#/Ebdom7" 
+  } else if (r5$tran_chord[i] == c("D, E, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "Edom7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F, A, C")){ 
+    r5$tran_chord_named[i] = "Fdom7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, E, F#/Gb, A#/Bb")){ #flips here again 
+    r5$tran_chord_named[i] = "F#/Gbdom7" 
+  } else if (r5$tran_chord[i] == c("D, F, G, B")){ 
+    r5$tran_chord_named[i] = "Gdom7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, G#/Ab, C")){ 
+    r5$tran_chord_named[i] = "G#/Abdom7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, E, G, A")){ #flips here again
+    r5$tran_chord_named[i] = "Adom7" 
+  } else if (r5$tran_chord[i] == c("D, F, G#/Ab, A#/Bb")){ 
+    r5$tran_chord_named[i] = "A#/Bbdom7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, A, B")){ 
+    r5$tran_chord_named[i] = "Bdom7" 
+  } else if (r5$tran_chord[i] == c("E, G, A#/Bb, C")){ 
+    r5$tran_chord_named[i] = "Cdom7"
+  } else if (r5$tran_chord[i] == c("C#/Db, E, G#/Ab, B")){ #min7 starts here
+    r5$tran_chord_named[i] = "C#/Dbmin7" 
+  } else if (r5$tran_chord[i] == c("D, F, A, C")){ 
+    r5$tran_chord_named[i] = "Dmin7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, D#/Eb, F#/Gb, A#/Bb")){ #flips here
+    r5$tran_chord_named[i] = "D#/Ebmin7" 
+  } else if (r5$tran_chord[i] == c("D, E, G, B")){ 
+    r5$tran_chord_named[i] = "Emin7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F, G#/Ab, C")){ 
+    r5$tran_chord_named[i] = "Fmin7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, E, F#/Gb, A")){ #flips here again
+    r5$tran_chord_named[i] = "F#/Gbmin7" 
+  } else if (r5$tran_chord[i] == c("D, F, G, A#/Bb")){ 
+    r5$tran_chord_named[i] = "Gmin7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "G#/Abmin7" 
+  } else if (r5$tran_chord[i] == c("E, G, A, C")){ 
+    r5$tran_chord_named[i] = "Amin7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, F, G#/Ab, A#/Bb")){ #flips here again
+    r5$tran_chord_named[i] = "A#/Bbmin7" 
+  } else if (r5$tran_chord[i] == c("D, F#/Gb, A, B")){ 
+    r5$tran_chord_named[i] = "Bmin7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, G, A#/Bb, C")){ 
+    r5$tran_chord_named[i] = "Cmin7"
+  } else if (r5$tran_chord[i] == c("C#/Db, E, G, B")){ #halfdim7 starts here
+    r5$tran_chord_named[i] = "C#/Dbhalfdim7" 
+  } else if (r5$tran_chord[i] == c("D, F, G#/Ab, C")){ 
+    r5$tran_chord_named[i] = "Dhalfdim7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, D#/Eb, F#/Gb, A")){ #flips here
+    r5$tran_chord_named[i] = "D#/Ebhalfdim7" 
+  } else if (r5$tran_chord[i] == c("D, E, G, A#/Bb")){ 
+    r5$tran_chord_named[i] = "Ehalfdim7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "Fhalfdim7" 
+  } else if (r5$tran_chord[i] == c("E, F#/Gb, A, C")){ 
+    r5$tran_chord_named[i] = "F#/Gbhalfdim7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, F, G, A#/Bb")){ #flips here again
+    r5$tran_chord_named[i] = "Ghalfdim7" 
+  } else if (r5$tran_chord[i] == c("D, F#/Gb, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "G#/Abhalfdim7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, G, A, C")){ 
+    r5$tran_chord_named[i] = "Ahalfdim7" 
+  } else if (r5$tran_chord[i] == c("C#/Db, E, G#/Ab, A#/Bb")){ #flips here again
+    r5$tran_chord_named[i] = "A#/Bbhalfdim7" 
+  } else if (r5$tran_chord[i] == c("D, F, A, B")){ 
+    r5$tran_chord_named[i] = "Bhalfdim7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, A#/Bb, C")){ 
+    r5$tran_chord_named[i] = "Chalfdim7"
+  } else if (r5$tran_chord[i] == c("C#/Db, E, G, A#/Bb")){ #fulldim7 starts here
+    r5$tran_chord_named[i] = "C#/Db, E, G, A#/Bb - fulldim7" 
+  } else if (r5$tran_chord[i] == c("D, F, G#/Ab, B")){ 
+    r5$tran_chord_named[i] = "D, F, G#/Ab, B - fulldim7" 
+  } else if (r5$tran_chord[i] == c("D#/Eb, F#/Gb, A, C")){ 
+    r5$tran_chord_named[i] = "D#/Eb, F#/Gb, A, C - fulldim7" 
+  } else {
+    r5$tran_chord_named[i] = NA
+  }
+}
+
+print("Transposed Chords Done")
+```
+
+The next step for comparison is to create the roman numeral equivalents to each of these chords based on the transposed key (C). Roman numerals are most easily explained by imagining them as tools to look at the macrostructure of a piece. Roman numerals don't directly represent pitches. They instead represent a chords function in a given time and a given key. Recall the authentic cadence "V - I," discussed earlier. In C, this would refer to the dominant chord (G) labeled as V, resolving to the tonic chord (C) labeled as I. One other bit of information, in the above loops you may notice that some chords have three notes and others have four. The four note chords used above are called seventh chords. I won't review their function here, but I wanted to acknowledge them to explain that when creating the roman numerals, I create two versions. The first includes the extra information of the fourth note in a seventh chord, the second excludes it. In this case considering a chord labeled "V7" to be "V," I am simply normalizing the chord to is most basic function. Otherwise, the variation would be too great between pieces to compare them. These loops are shown below
+
+```{r, class.source='long'}
+## Roman Numerals
+for (i in 1:NROW(r5)){
+  if (is.na(r5$tran_chord_named[i]) == TRUE) {
+    r5$roman_num[i] = NA
+  } else if (r5$tran_chord_named[i] == "Cmaj"){
+    r5$roman_num[i] = "I"
+  } else if (r5$tran_chord_named[i] == "Cmin" ){
+    r5$roman_num[i] = "i"
+  } else if (r5$tran_chord_named[i] == "Dmin" ){
+    r5$roman_num[i] = "ii"
+  } else if (r5$tran_chord_named[i] == "Dmaj" ){
+    r5$roman_num[i] = "V/V"
+  } else if (r5$tran_chord_named[i] == "Ddim"){
+    r5$roman_num[i] = "iiº"
+  } else if (r5$tran_chord_named[i] == "Emin"){
+    r5$roman_num[i] = "iii"
+  } else if (r5$tran_chord_named[i] == "Emaj"){
+    r5$roman_num[i] = "III"
+  } else if (r5$tran_chord_named[i] == "Fmaj" ){
+    r5$roman_num[i] = "IV"
+  } else if (r5$tran_chord_named[i] == "Fmin"){
+    r5$roman_num[i] = "iv"
+  } else if (r5$tran_chord_named[i] == "Gmaj"){
+    r5$roman_num[i] = "V"
+  } else if (r5$tran_chord_named[i] == "Gmin"){
+    r5$roman_num[i] = "ii/IV" # five of something
+  } else if (r5$tran_chord_named[i] == "Amin"){
+    r5$roman_num[i] = "vi"
+  } else if (r5$tran_chord_named[i] == "Amaj"){
+    r5$roman_num[i] = "VI"
+  } else if (r5$tran_chord_named[i] == "Bdim"){
+    r5$roman_num[i] = "viiº"
+  } else  if (r5$tran_chord_named[i] == "Cmaj7"){ # seventh chords start here
+    r5$roman_num[i] = "IM7"
+  } else if (r5$tran_chord_named[i] == "Cmin7" ){
+    r5$roman_num[i] = "i7"
+  } else if (r5$tran_chord_named[i] == "Cdom7" ){
+    r5$roman_num[i] = "V7/IV"
+  } else if (r5$tran_chord_named[i] == "Dmin7" ){
+    r5$roman_num[i] = "ii7"
+  } else if (r5$tran_chord_named[i] == "Ddom7" ){
+    r5$roman_num[i] = "V7/V"
+  } else if (r5$tran_chord_named[i] == "Dhalfdim7"){
+    r5$roman_num[i] = "iiø7"
+  } else if (r5$tran_chord_named[i] == "Emin7"){
+    r5$roman_num[i] = "iii7"
+  } else if (r5$tran_chord_named[i] == "Emaj7"){
+    r5$roman_num[i] = "IIIM7"
+  } else if (r5$tran_chord_named[i] == "Fmaj7" ){
+    r5$roman_num[i] = "IVM7"
+  } else if (r5$tran_chord_named[i] == "Fmin7"){
+    r5$roman_num[i] = "iv7"
+  } else if (r5$tran_chord_named[i] == "Fdom7"){
+    r5$roman_num[i] = "VI7"
+  } else if (r5$tran_chord_named[i] == "Gmaj7"){
+    r5$roman_num[i] = "VM7"
+  } else if (r5$tran_chord_named[i] == "Gdom7"){
+    r5$roman_num[i] = "V7"
+  } else if (r5$tran_chord_named[i] == "Gmin7"){
+    r5$roman_num[i] = "ii7/IV" # five of something
+  } else if (r5$tran_chord_named[i] == "Amin7"){
+    r5$roman_num[i] = "vi7"
+  } else if (r5$tran_chord_named[i] == "Amaj7"){
+    r5$roman_num[i] = "VIM7"
+  } else if (r5$tran_chord_named[i] == "Adom7"){
+    r5$roman_num[i] = "V7/ii"
+  } else if (r5$tran_chord_named[i] == "D, F, G#/Ab, B - fulldim7"){ # correct name
+    r5$roman_num[i] = "viiº7"
+  } else if (r5$tran_chord_named[i] == "Bhalfdim7"){
+    r5$roman_num[i] = "viiø7"
+  } else {
+    r5$roman_num[i] = NA
+  }
+}
+
+print("Roman Numerals Done")
+
+
+## Roman Numerals w/o Seventh Chords
+
+for (i in 1:NROW(r5)){
+  if (is.na(r5$tran_chord_named[i]) == TRUE) {
+    r5$norm_roman_num[i] = NA
+  } else if (r5$tran_chord_named[i] == "Cmaj"){
+    r5$norm_roman_num[i] = "I"
+  } else if (r5$tran_chord_named[i] == "Cmin" ){
+    r5$norm_roman_num[i] = "i"
+  } else if (r5$tran_chord_named[i] == "Dmin" ){
+    r5$norm_roman_num[i] = "ii"
+  } else if (r5$tran_chord_named[i] == "Dmaj" ){
+    r5$norm_roman_num[i] = "V/V"
+  } else if (r5$tran_chord_named[i] == "Ddim"){
+    r5$norm_roman_num[i] = "iiº"
+  } else if (r5$tran_chord_named[i] == "Emin"){
+    r5$norm_roman_num[i] = "iii"
+  } else if (r5$tran_chord_named[i] == "Emaj"){
+    r5$norm_roman_num[i] = "III"
+  } else if (r5$tran_chord_named[i] == "Fmaj" ){
+    r5$norm_roman_num[i] = "IV"
+  } else if (r5$tran_chord_named[i] == "Fmin"){
+    r5$norm_roman_num[i] = "iv"
+  } else if (r5$tran_chord_named[i] == "Gmaj"){
+    r5$norm_roman_num[i] = "V"
+  } else if (r5$tran_chord_named[i] == "Gmin"){
+    r5$norm_roman_num[i] = "ii/IV" # five of something
+  } else if (r5$tran_chord_named[i] == "Amin"){
+    r5$norm_roman_num[i] = "vi"
+  } else if (r5$tran_chord_named[i] == "Amaj"){
+    r5$norm_roman_num[i] = "VI"
+  } else if (r5$tran_chord_named[i] == "Bdim"){
+    r5$norm_roman_num[i] = "viiº"
+  } else  if (r5$tran_chord_named[i] == "Cmaj7"){ # seventh chords start here
+    r5$norm_roman_num[i] = "I"
+  } else if (r5$tran_chord_named[i] == "Cmin7" ){
+    r5$norm_roman_num[i] = "i"
+  } else if (r5$tran_chord_named[i] == "Cdom7" ){
+    r5$norm_roman_num[i] = "V/IV"
+  } else if (r5$tran_chord_named[i] == "Dmin7" ){
+    r5$norm_roman_num[i] = "ii"
+  } else if (r5$tran_chord_named[i] == "Ddom7" ){
+    r5$norm_roman_num[i] = "V/V"
+  } else if (r5$tran_chord_named[i] == "Dhalfdim7"){
+    r5$norm_roman_num[i] = "iiº"
+  } else if (r5$tran_chord_named[i] == "Emin7"){
+    r5$norm_roman_num[i] = "iii"
+  } else if (r5$tran_chord_named[i] == "Emaj7"){
+    r5$norm_roman_num[i] = "III"
+  } else if (r5$tran_chord_named[i] == "Fmaj7" ){
+    r5$norm_roman_num[i] = "IV"
+  } else if (r5$tran_chord_named[i] == "Fmin7"){
+    r5$norm_roman_num[i] = "iv"
+  } else if (r5$tran_chord_named[i] == "Fdom7"){
+    r5$norm_roman_num[i] = "VI"
+  } else if (r5$tran_chord_named[i] == "Gmaj7"){
+    r5$norm_roman_num[i] = "V"
+  } else if (r5$tran_chord_named[i] == "Gdom7"){
+    r5$norm_roman_num[i] = "V"
+  } else if (r5$tran_chord_named[i] == "Gmin7"){
+    r5$norm_roman_num[i] = "ii/IV" # five of something
+  } else if (r5$tran_chord_named[i] == "Amin7"){
+    r5$norm_roman_num[i] = "vi"
+  } else if (r5$tran_chord_named[i] == "Amaj7"){
+    r5$norm_roman_num[i] = "VI"
+  } else if (r5$tran_chord_named[i] == "Adom7"){
+    r5$norm_roman_num[i] = "V/ii"
+  } else if (r5$tran_chord_named[i] == "D, F, G#/Ab, B - fulldim7"){ # correct name
+    r5$norm_roman_num[i] = "viiº"
+  } else if (r5$tran_chord_named[i] == "Bhalfdim7"){
+    r5$norm_roman_num[i] = "viiº"
+  } else {
+    r5$norm_roman_num[i] = NA
+  }
+}
+
+print("Roman Numerals II Done")
+```
+
+I then remove all rows without chords in them.
+
+```{r}
+r5_test2 <- r5 %>% select(time, chord_named, 
+                          tran_chord_named, 
+                          roman_num, 
+                          norm_roman_num) %>% 
+  na.omit() %>% distinct()
+```
+
+All of the above loops are housed in the "C_Loop.R" script.
+
+To illustrate why/how I came to the conclusion to remove seventh chords in the roman numerals. Consider the two graphs below. The first contains all of the seventh chord roman numerals, the second contains only the normalized roman numerals. It is clearly easier to make a comparison (and read) with the normalized roman numerals.
+
+```{r, echo = FALSE}
+t <- read.csv("Data/tchaikovsky2.csv")
+r <- read.csv("Data/rachmaninoff2.csv")
+tr <- rbind(t, r)
+tr1 <- tr %>% filter(time <= 15000)
+
+g1 <- ggplot(tr1, aes(x = time, y = roman_num, group = tr1$piece)) +
+  geom_point(size = .2) + geom_line(aes(color = tr1$piece), alpha = .25)  + theme_tufte() +
+  facet_wrap(~composer, nrow = 6) +theme(axis.ticks = element_blank(),
+                                           axis.text.x = element_blank(),
+                                           legend.title = element_blank(),
+                                         legend.position = "none") + ylab(NULL) + xlab("Roman Numerals") + ggtitle("With Seventh Chords")
+g2 <- ggplot(tr1, aes(x = time, y = norm_roman_num, group = tr1$piece)) +
+  geom_point(size = .2) + geom_line(aes(color = tr1$piece), alpha = .25)  + theme_tufte() +
+  facet_wrap(~composer, nrow = 6) +theme(axis.ticks = element_blank(),
+                                           axis.text.x = element_blank(),
+                                           legend.title = element_blank(),
+                                         legend.position = "none") + ylab(NULL) + xlab("Roman Numerals") + ggtitle("Without Seventh Chords")
+g1
+
+g2
+```
+
+Finally, to complete the information I need, I add in some basic details such as composer, piece name, tonality, and type.
+
+```{r, eval = FALSE}
+#change info for new pieces
+r5_dun <- r5_test2  %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Rachmaninoff",
+                              piece = "Prelude Number 5 in G Minor",
+                              Tonality = "Minor",
+                              Type = "Solo Piano")
+```
+
+The final dataset for one piece looks like this:
+
+```{r, echo = FALSE, message=FALSE, class.source='long'}
+r2 <-r %>% filter(piece == "Prelude Number 5 in G Minor")
+library(DT)
+datatable(r2, options = list(pageLength = 5, autoWidth = TRUE))
+```
+
+I then save each composer to their own CSV file that I can recall later. The data set with all composers in it is just a combination of all the separate composer csv files read in and then combined using rbind(). I did this to make it easier to edit one composer without having to rerun all of the rest of the code for everyone else. 
+
+Reminder: This is the process for one piece for one composer. Initially, before I learned how to use source() I was copy and pasting these super long loops over and over. It was until I was well over 10,000 lines of code before I realized I could put them into scripts. The final processing of all pieces can be found in the "DVFP.Rmd" and "DVFP.html" files. 
+
+__One final note about midi:__ 
+Working with midi data is truly awful. I'm not sure I would wish it on anyone. Nothing is uniformly encoded, and often times you will get half way through your work and then be unable to proceed. This is why some composers only have 3 pieces and others have 5. This is also why my midi folder contains 60 files, and only 37 were used. 
+
+# The Visualizations
+
+As one can imagine, I had some very grand visualization ideas for this project. Maps and networks and similarity etc. There is so much room for interesting comparison. As it turns out, attempting to do this as a final project was a larger undertaking than I realized. I had to spend so much time developing the midi conversion, that the visualizations became a bit more standard. For this book, I will first present the ones I used, and then the ones I intend to build when I have more time!
+
+## The Leaflet Map
+
+I knew from the outset of this project that I wanted to create a leaflet map showing the lives and travels of the composers I would be studying. Originally, I thought I would use birth place, death place, and 3 or 4 major life events as markers on the map. I created this map for one composer "Rachmaninoff," and it was awesome because he traveled all over the world. 
+
+
+However, when I attempted to replicate this with another composer, I realized they only remained around Austria, and thus there were a mess of icons in one location. This, coupled with the fact that is was easier to define several major life events for some composers than others, led me to decide to just publish their birth place, death place, and where they were formally trained. This is represented in the graph in my project seen below. I created the dataset by researching the composers and inputing data I needed into excel. 
+
+```{r, echo=FALSE}
+library(leaflet)
+library(dplyr)
+map <- read.csv("Data/DVFP Composer Travels.csv", header = TRUE) # Moved coordinates slightly
+
+r_map <- map %>% filter(Composer == "Sergei Rachmaninoff")
+t_map <- map %>% filter(Composer == "Pyotr Ilyich Tchaikovsky")
+br_map <- map %>% filter(Composer == "Johannes Brahms")
+be_map <- map %>% filter(Composer == "Hector Berlioz")
+ch_map <- map %>% filter(Composer == "Frederic Chopin")
+m_map <- map %>% filter(Composer == "Gustav Mahler")
+beet_map <- map %>% filter(Composer == "Ludwig van Beethoven")
+dvo_map <- map %>% filter(Composer == "Antonin Dvorak")
+ver_map <- map %>% filter(Composer == "Giuseppe Verdi")
+
+
+rach_map <- data.frame(Group = map$Composer[1],
+                   Lat = c(map$GeoBornLat[1], map$GeoSchoolLat[1],
+                           map$GeoDiedLat[1]),
+                   Long = c(map$GeoBornLong[1], map$GeoSchoolLong[1], 
+                            map$GeoDiedLong[1]))
+
+tchai_map <- data.frame(Group = map$Composer[2],
+                   Lat = c(map$GeoBornLat[2], map$GeoSchoolLat[2],
+                           map$GeoDiedLat[2]),
+                   Long = c(map$GeoBornLong[2], map$GeoSchoolLong[2], 
+                            map$GeoDiedLong[2]))
+brahms_map <- data.frame(Group = map$Composer[3],
+                   Lat = c(map$GeoBornLat[3], map$GeoSchoolLat[3],
+                           map$GeoDiedLat[3]),
+                   Long = c(map$GeoBornLong[3], map$GeoSchoolLong[3], 
+                            map$GeoDiedLong[3]))
+berlioz_map <- data.frame(Group = map$Composer[4],
+                  Lat = c(map$GeoBornLat[4], map$GeoSchoolLat[4],
+                           map$GeoDiedLat[4]),
+                   Long = c(map$GeoBornLong[4], map$GeoSchoolLong[4], 
+                            map$GeoDiedLong[4]))
+chopin_map <- data.frame(Group = map$Composer[5],
+                   Lat = c(map$GeoBornLat[5], map$GeoSchoolLat[5],
+                           map$GeoDiedLat[5]),
+                   Long = c(map$GeoBornLong[5], map$GeoSchoolLong[5], 
+                            map$GeoDiedLong[5]))
+beethoven_map <- data.frame(Group = map$Composer[6],
+                   Lat = c(map$GeoBornLat[6], map$GeoSchoolLat[6],
+                           map$GeoDiedLat[6]),
+                   Long = c(map$GeoBornLong[6], map$GeoSchoolLong[6], 
+                            map$GeoDiedLong[6]))
+
+dvorak_map <- data.frame(Group = map$Composer[7],
+                   Lat = c(map$GeoBornLat[7], map$GeoSchoolLat[7],
+                           map$GeoDiedLat[7]),
+                   Long = c(map$GeoBornLong[7], map$GeoSchoolLong[7], 
+                            map$GeoDiedLong[7]))
+
+verdi_map <- data.frame(Group = map$Composer[8],
+                   Lat = c(map$GeoBornLat[8], map$GeoSchoolLat[8],
+                           map$GeoDiedLat[8]),
+                   Long = c(map$GeoBornLong[8], map$GeoSchoolLong[8], 
+                            map$GeoDiedLong[8]))
+
+mahler_map <- data.frame(Group = map$Composer[9],
+                   Lat = c(map$GeoBornLat[9], map$GeoSchoolLat[9],
+                           map$GeoDiedLat[9]),
+                   Long = c(map$GeoBornLong[9], map$GeoSchoolLong[9], 
+                            map$GeoDiedLong[9]))
+
+
+one_icon <- icons(
+  makeIcon(iconUrl = "Icons/baby2.png"),
+  iconWidth = 40, iconHeight = 50
+)
+
+two_icon <- icons(
+  makeIcon(iconUrl = "Icons/ts2.png"),
+  iconWidth = 40, iconHeight = 50
+)
+
+three_icon <- icons(
+  makeIcon(iconUrl = "Icons/school.png"),
+  iconWidth = 40, iconHeight = 50
+)
+
+content <- paste("Composer:", map$Composer, "<br/>",
+                 "Birth Date:", map$BirthDate, "<br/>",
+                 "Birth Place:", map$Born, "<br/>",
+                 "Quote:", map$Quote, "<br/>")
+content1 <- paste("Composer:", map$Composer, "<br/>",
+                 "School Name:", map$SchoolName, "<br/>",
+                 "School City:", map$SchoolCity, "<br/>",
+                 "Teacher:", map$TeacherName, "<br/>")
+content3 <- paste("Composer:", map$Composer, "<br/>",
+                  "Death Date:", map$DeathDate, "<br/>",
+                 "Death Place", map$Died, "<br/>")
+
+
+m <- leaflet(width = "100%") %>% 
+  setView(lat = map$GeoSchoolLat[3],
+          lng = map$GeoSchoolLong[3], zoom = 5)  %>%
+  addTiles('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', group = "Clear") %>% 
+  addTiles('https://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}', group = "Colorful") %>% 
+  #Beethoven
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[6], group = "Beethoven", 
+             icon = one_icon, data = beet_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[6], group = "Beethoven", 
+             icon = three_icon, data = beet_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[6], group = "Beethoven", 
+             icon = two_icon, data = beet_map) %>% 
+
+  #Berlioz
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[4], group = "Berlioz", 
+             icon = one_icon, data = be_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[4], group = "Berlioz", 
+             icon = three_icon, data = be_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[4], group = "Berlioz", 
+             icon = two_icon, data = be_map) %>%     
+  #Brahms 
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[3], group = "Brahms", 
+             icon = one_icon, data = br_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[3], group = "Brahms", 
+             icon = three_icon, data = br_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[3], group = "Brahms", 
+             icon = two_icon, data = br_map) %>% 
+  
+  #Chopin
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[5], group = "Chopin", 
+             icon = one_icon, data = ch_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[5], group = "Chopin", 
+             icon = three_icon, data = ch_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[5], group = "Chopin", 
+             icon = two_icon, data = ch_map) %>% 
+  
+
+  #Dvorak
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[7], group = "Dvorak", 
+             icon = one_icon, data = dvo_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[7], group = "Dvorak", 
+             icon = three_icon, data = dvo_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[7], group = "Dvorak", 
+             icon = two_icon, data = dvo_map) %>%
+
+
+  
+  #Mahler
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[9], group = "Mahler", 
+             icon = one_icon, data = m_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[9], group = "Mahler", 
+             icon = three_icon, data = m_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[9], group = "Mahler", 
+             icon = two_icon, data = m_map) %>% 
+  
+  #Rachmaninoff
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[1], group = "Rachmaninoff", 
+             icon = one_icon, data = r_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[1], group = "Rachmaninoff", 
+             icon = three_icon, data = r_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[1], group = "Rachmaninoff", 
+             icon = two_icon, data = r_map) %>%
+  
+ #Tchaikovsky
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[2], group = "Tchaikovsky", 
+             icon = one_icon, data = t_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[2], group = "Tchaikovsky", 
+             icon = three_icon, data = t_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[2], group = "Tchaikovsky", 
+             icon = two_icon, data = t_map) %>%
+  #Verdi  
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[8], group = "Verdi", 
+             icon = one_icon, data = ver_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[8], group = "Verdi", 
+             icon = three_icon, data = ver_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[8], group = "Verdi", 
+             icon = two_icon, data = ver_map) %>%    
+  
+    
+  addPolylines(data = rach_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#8B0000", group = "Rachmaninoff") %>%
+  addPolylines(data = tchai_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#CFB53B", group = "Tchaikovsky") %>%
+  addPolylines(data = brahms_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#228B22", group = "Brahms") %>%
+  addPolylines(data = berlioz_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#800080", group = "Berlioz") %>%
+  addPolylines(data = chopin_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#87ceeb", group = "Chopin") %>%
+  addPolylines(data = beethoven_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#8B4513", group = "Beethoven") %>%
+  addPolylines(data = dvorak_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1, 
+               color = "#A9A9A9", group = "Dvorak") %>%
+  addPolylines(data = verdi_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#FF8C00", group = "Verdi") %>%  
+  addPolylines(data = mahler_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#32CD32", group = "Mahler") %>%  
+  addLayersControl(
+    baseGroups = c("Clear", "Colorful"),
+    overlayGroups = c("Beethoven","Berlioz", "Brahms",  "Chopin", "Dvorak",
+                      "Mahler","Rachmaninoff", "Tchaikovsky", "Verdi"),
+    options = layersControlOptions(collapsed = FALSE)) %>%
+  hideGroup(c("Beethoven","Berlioz","Chopin",  "Dvorak",
+              "Mahler","Rachmaninoff", "Tchaikovsky", "Verdi"))
+
+
+m
+#Done for now!
+
+```
+
+
+Even though the resulting map looks very simple. Creating it was very challenging. The main issue I faced was getting everything grouped appropriately. At first I could layer all the birth places at once, then just the lines or just the icons, then the icons by composer and the lines separately, and finally all items moving in unison by composer (the goal). I accomplished this in a somewhat inelegant fashion by creating a data frame for both the points and lines separately. I realize in hindsight, that I could have probably indexed one data frame in a way to complete the same task, but at the time, it was easier to create a second data frame for the lines that only relied on the pertinent information for the lines. I got the icons  from noun project (Highly recommended!) and I separted the content into three variables that I then indexed in the graph. From what I can tell the rest is all pretty standard leaflet plotting. I did use custom colors for each composer. The only logic to their coloring was my qualitative intuition as to what color would be appropriate based on the music they composed. I also added a second set of tiles for the sake of variety. All of this is illustrated in the code below.
+
+```{r, eval=FALSE, class.source='long'}
+library(leaflet)
+library(dplyr)
+map <- read.csv("Data/DVFP Composer Travels.csv", header = TRUE) # Moved coordinates slightly
+
+r_map <- map %>% filter(Composer == "Sergei Rachmaninoff")
+t_map <- map %>% filter(Composer == "Pyotr Ilyich Tchaikovsky")
+br_map <- map %>% filter(Composer == "Johannes Brahms")
+be_map <- map %>% filter(Composer == "Hector Berlioz")
+ch_map <- map %>% filter(Composer == "Frederic Chopin")
+m_map <- map %>% filter(Composer == "Gustav Mahler")
+beet_map <- map %>% filter(Composer == "Ludwig van Beethoven")
+dvo_map <- map %>% filter(Composer == "Antonin Dvorak")
+ver_map <- map %>% filter(Composer == "Giuseppe Verdi")
+
+
+rach_map <- data.frame(Group = map$Composer[1],
+                   Lat = c(map$GeoBornLat[1], map$GeoSchoolLat[1],
+                           map$GeoDiedLat[1]),
+                   Long = c(map$GeoBornLong[1], map$GeoSchoolLong[1], 
+                            map$GeoDiedLong[1]))
+
+tchai_map <- data.frame(Group = map$Composer[2],
+                   Lat = c(map$GeoBornLat[2], map$GeoSchoolLat[2],
+                           map$GeoDiedLat[2]),
+                   Long = c(map$GeoBornLong[2], map$GeoSchoolLong[2], 
+                            map$GeoDiedLong[2]))
+brahms_map <- data.frame(Group = map$Composer[3],
+                   Lat = c(map$GeoBornLat[3], map$GeoSchoolLat[3],
+                           map$GeoDiedLat[3]),
+                   Long = c(map$GeoBornLong[3], map$GeoSchoolLong[3], 
+                            map$GeoDiedLong[3]))
+berlioz_map <- data.frame(Group = map$Composer[4],
+                  Lat = c(map$GeoBornLat[4], map$GeoSchoolLat[4],
+                           map$GeoDiedLat[4]),
+                   Long = c(map$GeoBornLong[4], map$GeoSchoolLong[4], 
+                            map$GeoDiedLong[4]))
+chopin_map <- data.frame(Group = map$Composer[5],
+                   Lat = c(map$GeoBornLat[5], map$GeoSchoolLat[5],
+                           map$GeoDiedLat[5]),
+                   Long = c(map$GeoBornLong[5], map$GeoSchoolLong[5], 
+                            map$GeoDiedLong[5]))
+beethoven_map <- data.frame(Group = map$Composer[6],
+                   Lat = c(map$GeoBornLat[6], map$GeoSchoolLat[6],
+                           map$GeoDiedLat[6]),
+                   Long = c(map$GeoBornLong[6], map$GeoSchoolLong[6], 
+                            map$GeoDiedLong[6]))
+
+dvorak_map <- data.frame(Group = map$Composer[7],
+                   Lat = c(map$GeoBornLat[7], map$GeoSchoolLat[7],
+                           map$GeoDiedLat[7]),
+                   Long = c(map$GeoBornLong[7], map$GeoSchoolLong[7], 
+                            map$GeoDiedLong[7]))
+
+verdi_map <- data.frame(Group = map$Composer[8],
+                   Lat = c(map$GeoBornLat[8], map$GeoSchoolLat[8],
+                           map$GeoDiedLat[8]),
+                   Long = c(map$GeoBornLong[8], map$GeoSchoolLong[8], 
+                            map$GeoDiedLong[8]))
+
+mahler_map <- data.frame(Group = map$Composer[9],
+                   Lat = c(map$GeoBornLat[9], map$GeoSchoolLat[9],
+                           map$GeoDiedLat[9]),
+                   Long = c(map$GeoBornLong[9], map$GeoSchoolLong[9], 
+                            map$GeoDiedLong[9]))
+
+
+one_icon <- icons(
+  makeIcon(iconUrl = "Icons/baby2.png"),
+  iconWidth = 40, iconHeight = 50
+)
+
+two_icon <- icons(
+  makeIcon(iconUrl = "Icons/ts2.png"),
+  iconWidth = 40, iconHeight = 50
+)
+
+three_icon <- icons(
+  makeIcon(iconUrl = "Icons/school.png"),
+  iconWidth = 40, iconHeight = 50
+)
+
+content <- paste("Composer:", map$Composer, "<br/>",
+                 "Birth Date:", map$BirthDate, "<br/>",
+                 "Birth Place:", map$Born, "<br/>",
+                 "Quote:", map$Quote, "<br/>")
+content1 <- paste("Composer:", map$Composer, "<br/>",
+                 "School Name:", map$SchoolName, "<br/>",
+                 "School City:", map$SchoolCity, "<br/>",
+                 "Teacher:", map$TeacherName, "<br/>")
+content3 <- paste("Composer:", map$Composer, "<br/>",
+                  "Death Date:", map$DeathDate, "<br/>",
+                 "Death Place", map$Died, "<br/>")
+
+
+m <- leaflet(width = "100%") %>% 
+  setView(lat = map$GeoSchoolLat[3],
+          lng = map$GeoSchoolLong[3], zoom = 5)  %>%
+  addTiles('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', group = "Clear") %>% 
+  addTiles('https://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}', group = "Colorful") %>% 
+  #Beethoven
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[6], group = "Beethoven", 
+             icon = one_icon, data = beet_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[6], group = "Beethoven", 
+             icon = three_icon, data = beet_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[6], group = "Beethoven", 
+             icon = two_icon, data = beet_map) %>% 
+
+  #Berlioz
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[4], group = "Berlioz", 
+             icon = one_icon, data = be_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[4], group = "Berlioz", 
+             icon = three_icon, data = be_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[4], group = "Berlioz", 
+             icon = two_icon, data = be_map) %>%     
+  #Brahms 
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[3], group = "Brahms", 
+             icon = one_icon, data = br_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[3], group = "Brahms", 
+             icon = three_icon, data = br_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[3], group = "Brahms", 
+             icon = two_icon, data = br_map) %>% 
+  
+  #Chopin
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[5], group = "Chopin", 
+             icon = one_icon, data = ch_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[5], group = "Chopin", 
+             icon = three_icon, data = ch_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[5], group = "Chopin", 
+             icon = two_icon, data = ch_map) %>% 
+  
+
+  #Dvorak
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[7], group = "Dvorak", 
+             icon = one_icon, data = dvo_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[7], group = "Dvorak", 
+             icon = three_icon, data = dvo_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[7], group = "Dvorak", 
+             icon = two_icon, data = dvo_map) %>%
+
+
+  
+  #Mahler
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[9], group = "Mahler", 
+             icon = one_icon, data = m_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[9], group = "Mahler", 
+             icon = three_icon, data = m_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[9], group = "Mahler", 
+             icon = two_icon, data = m_map) %>% 
+  
+  #Rachmaninoff
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[1], group = "Rachmaninoff", 
+             icon = one_icon, data = r_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[1], group = "Rachmaninoff", 
+             icon = three_icon, data = r_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[1], group = "Rachmaninoff", 
+             icon = two_icon, data = r_map) %>%
+  
+ #Tchaikovsky
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[2], group = "Tchaikovsky", 
+             icon = one_icon, data = t_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[2], group = "Tchaikovsky", 
+             icon = three_icon, data = t_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[2], group = "Tchaikovsky", 
+             icon = two_icon, data = t_map) %>%
+  #Verdi  
+  addMarkers(~GeoBornLong, ~GeoBornLat,
+             popup = content[8], group = "Verdi", 
+             icon = one_icon, data = ver_map) %>% 
+  addMarkers(~GeoSchoolLong, ~GeoSchoolLat,
+             popup = content1[8], group = "Verdi", 
+             icon = three_icon, data = ver_map) %>% 
+  addMarkers(~GeoDiedLong, ~GeoDiedLat,
+             popup = content3[8], group = "Verdi", 
+             icon = two_icon, data = ver_map) %>%    
+  
+    
+  addPolylines(data = rach_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#8B0000", group = "Rachmaninoff") %>%
+  addPolylines(data = tchai_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#CFB53B", group = "Tchaikovsky") %>%
+  addPolylines(data = brahms_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#228B22", group = "Brahms") %>%
+  addPolylines(data = berlioz_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#800080", group = "Berlioz") %>%
+  addPolylines(data = chopin_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#87ceeb", group = "Chopin") %>%
+  addPolylines(data = beethoven_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#8B4513", group = "Beethoven") %>%
+  addPolylines(data = dvorak_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1, 
+               color = "#A9A9A9", group = "Dvorak") %>%
+  addPolylines(data = verdi_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#FF8C00", group = "Verdi") %>%  
+  addPolylines(data = mahler_map, lng = ~Long, lat = ~Lat,
+               smoothFactor = 4, weight = 2, opacity = 1,
+               color = "#32CD32", group = "Mahler") %>%  
+  addLayersControl(
+    baseGroups = c("Clear", "Colorful"),
+    overlayGroups = c("Beethoven","Berlioz", "Brahms",  "Chopin", "Dvorak",
+                      "Mahler","Rachmaninoff", "Tchaikovsky", "Verdi"),
+    options = layersControlOptions(collapsed = FALSE)) %>%
+  hideGroup(c("Beethoven","Berlioz","Chopin",  "Dvorak",
+              "Mahler","Rachmaninoff", "Tchaikovsky", "Verdi"))
+
+
+m
+#Done for now!
+
+```
+
+
+## The Linegraphs
+
+I decided to visualize the harmony of pieces over time, and then examine them by composer and by piece type. This task is well suited to linegraphs. Because I created the dataset, I already had all the information I needed so the graph creation was pretty straightforward. I really like the hyper minimalist approach to graphs. For these line graphs I decided not to provide a legend, and instead provide interactivity. I thought the legend would basically be useless. Furthermore, I thought the interactivity would add an interesting dimension that otherwise wouldnt be percievable. The only important note is that I shortened the time window to less than 15000 (units unknown). I found that by doing so, I captured nearly all of the information in a shorter piece, and I captured all of the key centered information in a longer piece. What I mean by the latter is that after this time (~15000) longer pieces were likely to modulate to a different key for a section of the piece. At their current state, my various functions arent equipped to deal with this (yet!). Again, I gave each composer a custom color very closely related to the one in the map -- but then I didn't use them. 
+
+### Linegraph 1
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
+library(ggrepel)
+library(plotly)
+library(ggthemes)
+t <- read.csv("Data/tchaikovsky2.csv")
+r <- read.csv("Data/rachmaninoff2.csv")
+c <- read.csv("Data/chopin.csv")
+br <- read.csv("Data/brahms.csv")
+be <- read.csv("Data/berlioz.csv")
+beet <- read.csv("Data/beethoven.csv")
+v <- read.csv("Data/verdi.csv")
+d <- read.csv("Data/dvorak.csv")
+m <- read.csv("Data/mahler.csv")
+Composers <- rbind(r, t, c, br, be, beet, v, d, m)
+
+
+comp_short <- Composers %>% filter(time <= 15000)
+
+cols <- c("Rachmaninoff" = "Dark Red",
+          "Tchaikovsky" = "Gold", 
+          "Brahms" = "Dark Green",
+          "Berlioz" = "Violet", 
+          "Chopin" = "Light Blue", 
+          "Beethoven" = "Brown",
+          "Dvorak" = "Gray",
+          "Verdi" = "Orange",
+          "Mahler"= "Light Green")
+
+Piece <- comp_short$piece
+Roman_Numeral <- comp_short$norm_roman_num
+g<- ggplot(comp_short, aes(x = time, y = Roman_Numeral, group = Piece)) +
+  geom_point(size = .2) + geom_line(aes(color = Piece), alpha = .25)  + theme_tufte() +
+  facet_wrap(~composer, nrow = 9) +theme(axis.ticks = element_blank(),
+                                           axis.text.x = element_blank(),
+                                           legend.title = element_blank(),
+                                         legend.position = "none") + 
+  ylab(NULL) + xlab(NULL) +
+  ggtitle("Harmonic Movement Among Romantic Era Composers")
+
+ggplotly(g, tooltip = c("y", "colour")) 
+```
+
+```{r, eval=FALSE, class.source='long'}
+library(ggrepel)
+library(plotly)
+library(ggthemes)
+t <- read.csv("Data/tchaikovsky2.csv")
+r <- read.csv("Data/rachmaninoff2.csv")
+c <- read.csv("Data/chopin.csv")
+br <- read.csv("Data/brahms.csv")
+be <- read.csv("Data/berlioz.csv")
+beet <- read.csv("Data/beethoven.csv")
+v <- read.csv("Data/verdi.csv")
+d <- read.csv("Data/dvorak.csv")
+m <- read.csv("Data/mahler.csv")
+Composers <- rbind(r, t, c, br, be, beet, v, d, m)
+
+
+comp_short <- Composers %>% filter(time <= 15000)
+
+cols <- c("Rachmaninoff" = "Dark Red",
+          "Tchaikovsky" = "Gold", 
+          "Brahms" = "Dark Green",
+          "Berlioz" = "Violet", 
+          "Chopin" = "Light Blue", 
+          "Beethoven" = "Brown",
+          "Dvorak" = "Gray",
+          "Verdi" = "Orange",
+          "Mahler"= "Light Green")
+
+Piece <- comp_short$piece
+Roman_Numeral <- comp_short$norm_roman_num
+g<- ggplot(comp_short, aes(x = time, y = Roman_Numeral, group = Piece)) +
+  geom_point(size = .2) + geom_line(aes(color = Piece), alpha = .25)  + theme_tufte() +
+  facet_wrap(~composer, nrow = 9) +theme(axis.ticks = element_blank(),
+                                           axis.text.x = element_blank(),
+                                           legend.title = element_blank(),
+                                         legend.position = "none") + 
+  ylab(NULL) + xlab(NULL) +
+  ggtitle("Harmonic Movement Among Romantic Era Composers")
+
+ggplotly(g, tooltip = c("y", "colour")) # lineplot attempt faceted by composer eventually by country 
+```
+
+### Linegraph 2
+
+```{r, echo=FALSE, fig.height=22, fig.width=10, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+library(plotly)
+t <- read.csv("Data/tchaikovsky2.csv")
+r <- read.csv("Data/rachmaninoff2.csv")
+c <- read.csv("Data/chopin.csv")
+br <- read.csv("Data/brahms.csv")
+be <- read.csv("Data/berlioz.csv")
+beet <- read.csv("Data/beethoven.csv")
+v <- read.csv("Data/verdi.csv")
+d <- read.csv("Data/dvorak.csv")
+m <- read.csv("Data/mahler.csv")
+Composers <- rbind(r, t, c, br, be, beet, v, d, m)
+
+
+comp_short <- Composers %>% filter(time <= 15000)
+Piece <- comp_short$piece
+Roman_Numeral <- comp_short$norm_roman_num
+
+g<- ggplot(comp_short, aes(x = time, y = Roman_Numeral, group = Piece)) +
+  geom_point(size = .2) + geom_line(aes(color = Piece), alpha = .25)  + theme_tufte() +
+  facet_wrap(~Type, nrow = 12) +theme(axis.ticks = element_blank(),
+                                           axis.text.x = element_blank(),
+                                           legend.title = element_blank(),
+                                         legend.position = "none") + 
+  ylab(NULL) + xlab(NULL) + 
+  ggtitle("Harmonic Movement in the Romantic Era")
+
+ggplotly(g, tooltip = c("y", "colour")) 
+
+#done for now!
+```
+
+```{r, eval=FALSE, class.source='long'}
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+library(plotly)
+t <- read.csv("Data/tchaikovsky2.csv")
+r <- read.csv("Data/rachmaninoff2.csv")
+c <- read.csv("Data/chopin.csv")
+br <- read.csv("Data/brahms.csv")
+be <- read.csv("Data/berlioz.csv")
+beet <- read.csv("Data/beethoven.csv")
+v <- read.csv("Data/verdi.csv")
+d <- read.csv("Data/dvorak.csv")
+m <- read.csv("Data/mahler.csv")
+Composers <- rbind(r, t, c, br, be, beet, v, d, m)
+
+
+comp_short <- Composers %>% filter(time <= 15000)
+Piece <- comp_short$piece
+Roman_Numeral <- comp_short$norm_roman_num
+
+g<- ggplot(comp_short, aes(x = time, y = Roman_Numeral, group = Piece)) +
+  geom_point(size = .2) + geom_line(aes(color = Piece), alpha = .25)  + theme_tufte() +
+  facet_wrap(~Type, nrow = 12) +theme(axis.ticks = element_blank(),
+                                           axis.text.x = element_blank(),
+                                           legend.title = element_blank(),
+                                         legend.position = "none") + 
+  ylab(NULL) + xlab(NULL) + 
+  ggtitle("Harmonic Movement in the Romantic Era")
+
+ggplotly(g, tooltip = c("y", "colour")) 
+
+#done for now!
+```
+## The Barcharts
+
+The barcharts are also relatively straightforward. The linegraphs, though gesturally informative, are a bit hard to interpret. For the bar charts, I was interested in very clearly presenting cadential habits of composers. In order to do so, I looked at all the chords where their first lag was Gdom7, or the V7 chord (also known as the dominant). This ensured that the chords that remained were all resolutions of cadences. I did some simple color customization making the tonality colors blue for major and red for minor. The second barchart is the same information faceted by composer.  
+
+### Barchart 1
+```{r, echo=FALSE, out.height='100%', out.width='100%'}
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+t <- read.csv("Data/tchaikovsky2.csv")
+r <- read.csv("Data/rachmaninoff2.csv")
+c <- read.csv("Data/chopin.csv")
+br <- read.csv("Data/brahms.csv")
+be <- read.csv("Data/berlioz.csv")
+beet <- read.csv("Data/beethoven.csv")
+v <- read.csv("Data/verdi.csv")
+d <- read.csv("Data/dvorak.csv")
+m <- read.csv("Data/mahler.csv")
+Composers <- rbind(r, t, c, br, be, beet, v, d, m)
+
+tone_cols <- c("Major" = "Blue", "Minor" = "Dark Red", "Unknown" = "Black")
+r_V <- Composers %>% filter(one_lag_tran == "Gdom7", tran_chord_named != "Gdom7",
+                            tran_chord_named != "Gmaj")
+
+g2 <- ggplot(r_V, aes(x = norm_roman_num)) + geom_bar(aes(fill = Tonality)) +
+  theme_tufte() + ggtitle("Cadential Frequency: Chords Following V")  + 
+  xlab("Roman Numerals") + ylab("Count") + theme(legend.position = "none") + 
+  facet_wrap(~Tonality) + coord_flip() + scale_fill_manual(values = tone_cols) # example barchart
+
+g2
+
+#done for now!
+
+```
+
+```{r, eval=FALSE, class.source='long'}
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+
+t <- read.csv("Data/tchaikovsky2.csv")
+r <- read.csv("Data/rachmaninoff2.csv")
+c <- read.csv("Data/chopin.csv")
+br <- read.csv("Data/brahms.csv")
+be <- read.csv("Data/berlioz.csv")
+beet <- read.csv("Data/beethoven.csv")
+v <- read.csv("Data/verdi.csv")
+d <- read.csv("Data/dvorak.csv")
+m <- read.csv("Data/mahler.csv")
+Composers <- rbind(r, t, c, br, be, beet, v, d, m)
+tone_cols <- c("Major" = "Blue", "Minor" = "Dark Red", "Unknown" = "Black")
+r_V <- Composers %>% filter(one_lag_tran == "Gdom7", tran_chord_named != "Gdom7",
+                            tran_chord_named != "Gmaj")
+
+g2 <- ggplot(r_V, aes(x = norm_roman_num)) + geom_bar(aes(fill = Tonality)) +
+  theme_tufte() + ggtitle("Cadential Frequency: Chords Following V")  + 
+  xlab("Roman Numerals") + ylab("Count") + theme(legend.position = "none") + 
+  facet_wrap(~Tonality) + coord_flip() + scale_fill_manual(values = tone_cols) # example barchart
+
+g2
+
+#done for now!
+
+```
+
+### Barchart 2
+
+```{r, echo=FALSE, out.height='100%', out.width='100%'}
+
+tone_cols <- c("Major" = "Blue", "Minor" = "Dark Red", "Unknown" = "Black")
+tone_opac <- c("Major" = 20, "Minor" = 10)
+r_V <- Composers %>% filter(one_lag_tran == "Gdom7", tran_chord_named != "Gdom7",
+                            tran_chord_named != "Gmaj")
+
+g2 <- ggplot(r_V, aes(x = norm_roman_num)) + geom_bar(aes(fill = Tonality)) + 
+  theme_tufte() + ggtitle("Cadential Frequency: Chords Following V")  +
+  xlab("Roman Numerals") + ylab("Count") + theme(legend.position = "none") + 
+  facet_grid(composer ~ Tonality) + coord_flip() +
+  scale_fill_manual(values = tone_cols) # example barchart
+
+g2
+
+
+#Done for now!
+```
+
+```{r, eval=FALSE, class.source='long'}
+
+tone_cols <- c("Major" = "Blue", "Minor" = "Dark Red", "Unknown" = "Black")
+tone_opac <- c("Major" = 20, "Minor" = 10)
+r_V <- Composers %>% filter(one_lag_tran == "Gdom7", tran_chord_named != "Gdom7",
+                            tran_chord_named != "Gmaj")
+
+g2 <- ggplot(r_V, aes(x = norm_roman_num)) + geom_bar(aes(fill = Tonality)) + 
+  theme_tufte() + ggtitle("Cadential Frequency: Chords Following V")  +
+  xlab("Roman Numerals") + ylab("Count") + theme(legend.position = "none") + 
+  facet_grid(composer ~ Tonality) + coord_flip() +
+  scale_fill_manual(values = tone_cols) # example barchart
+
+g2
+```
+
+
+## The Data Table
+
+I wanted to add a data table to add extra insight to the information that I am presenting. Its a pretty straightforward table with filters. The only real customization I did was to change the order and the color of the composer column. 
+
+```{r, echo = FALSE, out.width='100%', message=FALSE, warning=FALSE}
+library(DT)
+library(dplyr)
+t <- read.csv("Data/tchaikovsky2.csv")
+r <- read.csv("Data/rachmaninoff2.csv")
+c <- read.csv("Data/chopin.csv")
+br <- read.csv("Data/brahms.csv")
+be <- read.csv("Data/berlioz.csv")
+beet <- read.csv("Data/beethoven.csv")
+v <- read.csv("Data/verdi.csv")
+d <- read.csv("Data/dvorak.csv")
+m <- read.csv("Data/mahler.csv")
+Composers <- rbind(r, t, c, br, be, beet, v, d, m)
+
+dat <- Composers[c(-2, -(7:10))] %>% select(composer, piece, Tonality, Type, X, chord_named, tran_chord_named, roman_num, norm_roman_num)
+
+library(stringr)
+pretty_headers <- gsub("[_]", " ", colnames(dat)) %>%  str_to_title()
+pretty_headers[7] <- "Transposed Chord"
+pretty_headers[6] <- "Chord"
+pretty_headers[8] <- "Roman Numeral"
+pretty_headers[9] <- "Normalized Roman Numeral"
+pretty_headers[5] <- "Event Number"
+
+
+datatable(dat, rownames = FALSE,
+    colnames = pretty_headers,
+    filter = list(position = "top"),
+    options = list(language = list(sSearch = "Filter:"))) %>% 
+  formatStyle('composer',  color = 'white', 
+              backgroundColor = 'black')
+```
+
+```{r, eval=FALSE, class.source='long'}
+library(DT)
+library(dplyr)
+t <- read.csv("Data/tchaikovsky2.csv")
+r <- read.csv("Data/rachmaninoff2.csv")
+c <- read.csv("Data/chopin.csv")
+br <- read.csv("Data/brahms.csv")
+be <- read.csv("Data/berlioz.csv")
+beet <- read.csv("Data/beethoven.csv")
+v <- read.csv("Data/verdi.csv")
+d <- read.csv("Data/dvorak.csv")
+m <- read.csv("Data/mahler.csv")
+Composers <- rbind(r, t, c, br, be, beet, v, d, m)
+dat <- Composers[c(-2, -(7:10))] %>% select(composer, piece, Tonality, Type, X, chord_named, tran_chord_named, roman_num, norm_roman_num)
+
+library(stringr)
+pretty_headers <- gsub("[_]", " ", colnames(dat)) %>%  str_to_title()
+pretty_headers[7] <- "Transposed Chord"
+pretty_headers[6] <- "Chord"
+pretty_headers[8] <- "Roman Numeral"
+pretty_headers[9] <- "Normalized Roman Numeral"
+pretty_headers[5] <- "Event Number"
+
+
+datatable(dat, rownames = FALSE,
+    colnames = pretty_headers,
+    filter = list(position = "top"),
+    options = list(language = list(sSearch = "Filter:"))) %>% 
+  formatStyle('composer',  color = 'white', 
+              backgroundColor = 'black')
+
+
+```
+
+## Hosting
+
+I chose to host my website via GitHub. To do so, I rendered all my rmarkdown files into a website. Below is my site setup. 
+
+```{yml, eval=FALSE}
+name: "DVFP FINAL PROJECT"
+navbar:
+  type: inverse
+  left:
+    - text: "Composers and Their Lives"
+      href: index.html
+    - text: "Harmonic Motion by Composer"
+      href: linegraph1.html
+    - text: "Harmonic Motion by Type of Piece"
+      href: linegraph2.html
+    - text: "Cadential Frequency"
+      href: barchart1.html
+    - text: "Cadences by Composer"
+      href: barchart2.html
+    - text: "Data"
+      href: dvfpdata.html
+```
+
+## Network Graph
+
+Unfortunately, my network graph didn't turn out the way I had hoped. Due to the issues of missing harmonic movement discussed before, it seems everything links to everything. Therefore, I decided not to include it. As I continue to update the data it should improve. An example is provided below. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(networkD3)
+library(igraph)
+net<- Composers %>% select(roman_num)
+net <- mutate(net,
+       rn_lag = lag(roman_num),
+       rn_lag2 = lag(roman_num, n = 2),
+       rn_lag3 = lag(roman_num, n = 3))
+net <- net[-1:-3,]
+net <- net %>% select(rn_lag3, rn_lag2, rn_lag, roman_num)
+net <- net %>% filter(rn_lag != rn_lag2, rn_lag2 != rn_lag3, roman_num != rn_lag)
+
+graph <- graph_from_data_frame(net, directed = T)
+graph <- simplify(graph, remove.multiple = T)
+
+
+wc <- cluster_walktrap(graph) 
+
+members <- membership(wc)
+
+
+g2 <- igraph_to_networkD3(graph, group=members)
+g2$nodes$size <- centralization.degree(graph)$res
+
+
+ip1 <- forceNetwork(Links = g2$links, Nodes = g2$nodes, 
+             Source = 'source', Target = 'target', 
+             NodeID = 'name', Group = 'group',
+             Nodesize = 'size',
+             charge = -100,linkDistance = 200,
+             zoom = T, opacity = 1, 
+             fontSize=24, arrows = F)
+
+
+
+ip1
+```
+
+
+# Other Ideas?
+## Convert to text??
+Something that I was unable to do but thought could be fascinating is to convert the various midifiles to text files with just the chord and melody information remaining. Then I could create corpuses by composer and measure their similarity and so forth. By the time this idea came to me it was too late, but I will return to it after the semester!
+
+# Conclusions
+
+I learned more doing this project than any other assignment during my entire graduate education. It was very difficult and took a very long time, but I have come through a significantly better r programmer. I also realize that the huge amount of work was partially attributed to the fact that I didn't join a group (again, sorry for that!). However, in hindsight, I'm not sure I would have wanted to do this in a group. Firstly, I doubt I would have been able to study this topic. Second of all, I learned so much through having to push through my own lack of knowledge with certain tasks. Granted, I could have learned a lot from a team as well! 
+
+# What's next?
+
+I plan to continue to work on this after the semester ends. I am not satistfied with the level of harmony I was able to capture, and I intend to explore some options to recitfy this. I also intend to rewrite everything as functions and figure out how to avoid midi encoding problems so that I can streamline this process significantly and add a ton of more pieces and composers. After fixing the harmony, I will return to my network graph as I believe it will be much more successful. Also, I want to explore the option of applying some text mining techniques to harmonic movement. Best case scenario, this will all result in a very comprehensive shiny app that I can use a very powerful piece in my portfolio. I'll keep you posted on the progress! 

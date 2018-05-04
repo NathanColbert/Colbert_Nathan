@@ -4,6 +4,7 @@ author: "Nathan Colbert"
 date: "3/25/2018"
 output: 
   html_document:
+    keep_md: true
     toc: TRUE
 ---
 

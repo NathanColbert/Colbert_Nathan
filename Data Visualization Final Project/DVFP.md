@@ -1,0 +1,1654 @@
+---
+title: "Data Visualization Final Project"
+author: "Nathan Colbert"
+date: "3/25/2018"
+output: 
+  html_document:
+    keep_md: true
+    toc: TRUE
+---
+
+
+# Rachmaninoff - Complete
+## Rachmaninoff 5th Piano Prelude in G minor
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/Rach23n5.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is Bb (10) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 5
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+  
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+
+### Piece Information
+
+```r
+#change info for new pieces
+r5_dun <- r5_test2  %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Rachmaninoff",
+                              piece = "Prelude Number 5 in G Minor",
+                              Tonality = "Minor",
+                              Type = "Solo Piano")
+```
+
+
+
+## Rachmaninoff Second Piano Sonata in Bb Minor
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/Rachson2.mid")
+
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is Bb (10) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 2
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+  
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+
+## Change names/variable here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Rachmaninoff",
+                              piece = "Piano Sonata 2 in Bb Minor",
+                              Tonality = "Minor",
+                              Type = "Piano Sonata")
+
+Rachmaninoff <- rbind(r5_dun, r5_dun2)
+```
+
+
+## Rachmaninoff Prelude no. 1 in C major 
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/tmra3201.mid")
+
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+
+
+
+## Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is Bb (10) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 0
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+
+
+
+
+## Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Rachmaninoff",
+                              piece = "Piano Prelude no. 1 in C Major",
+                              Tonality = "Major",
+                              Type = "Solo Piano")
+
+Rachmaninoff <- rbind(Rachmaninoff, r5_dun2)
+```
+
+
+## Rachmaninoff Prelude no. 11 in B major 
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/tmra3211.mid")
+
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+## Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is B (11) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 1
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+
+## Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Rachmaninoff",
+                              piece = "Piano Prelude no. 11 in B Major",
+                              Tonality = "Major",
+                              Type = "Solo Piano")
+
+Rachmaninoff <- rbind(Rachmaninoff, r5_dun2)
+```
+
+
+## Rachmaninoff Romance for 2 Pianos (Cminor) 
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/Rachmani.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+
+## Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is C (12) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 0
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+## Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Rachmaninoff",
+                              piece = "Romance for 2 Pianos",
+                              Tonality = "Major",
+                              Type = "Piano Duet")
+
+Rachmaninoff <- rbind(Rachmaninoff, r5_dun2)
+write.csv(Rachmaninoff, "rachmaninoff2.csv")
+```
+
+
+# Tchaikovsky - Complete
+## Tchaikovsky Dance of the Sugar Plum Fairy (E minor)
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/fee.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+## Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is E (4) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 8
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+
+## Change here
+
+```r
+#change here for new pieces
+Tchaikovsky <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                   two_lag_tran = lag(tran_chord_named, n = 2),
+                   three_lag_tran = lag(tran_chord_named, n = 3),
+                   four_lag_tran = lag(tran_chord_named, n = 4),
+                   composer = "Tchaikovsky",
+                   piece = "Dance of the Sugar Plum Fairy",
+                   Tonality = "Minor",
+                   Type = "Ballet")
+```
+
+
+## Tchaikovsky String Quartet No.1 in D, Op.11 (D Major)
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/tch_qr1a.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+## Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is D (2) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 10
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+
+## Change names/variable here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Tchaikovsky",
+                              piece = "String Quartet no. 1 in D, Mvt 1",
+                              Tonality = "Major",
+                              Type = "String Quartet")
+
+Tchaikovsky <- rbind(Tchaikovsky, r5_dun2)
+```
+
+
+## Tchaikovsky Swan Lake (Valse) (A major)
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/swanlk-2.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+## Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is A (8) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 4
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+## Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Tchaikovsky",
+                              piece = "Swan Lake (Valse)",
+                              Tonality = "Major",
+                              Type = "Ballet")
+
+Tchaikovsky <- rbind(Tchaikovsky, r5_dun2)
+```
+
+
+## Tchaikovsky Piano Concerto 1 movement 1 (Bb minor)
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/tchai1-1.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+## Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is Bb (10) and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 2
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+## Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Tchaikovsky",
+                              piece = "Piano Concerto 1, mvt. 1",
+                              Tonality = "Minor",
+                              Type = "Piano Concerto")
+
+Tchaikovsky <- rbind(Tchaikovsky, r5_dun2)
+```
+
+
+## Tchaikovsky Romance (F Minor)
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/Romancef.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+## Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 7
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+## Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Tchaikovsky",
+                              piece = "Romance in F minor",
+                              Tonality = "Minor",
+                              Type = "Solo Piano")
+
+Tchaikovsky <- rbind(Tchaikovsky, r5_dun2)
+write.csv(Tchaikovsky, "tchaikovsky2.csv")
+```
+
+# Chopin - Complete
+## Ballade Number 1 in G Minor
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/chop23b.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 7  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 5
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+Chopin <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Chopin",
+                              piece = "Ballade No 1 in G Minor",
+                              Tonality = "Minor",
+                              Type = "Solo Piano")
+```
+
+## Nocturne No.19 in E-
+### Load in 
+
+```r
+rach_5 <- readMidi("Midi/op72.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 4 and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 8
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Chopin",
+                              piece = "Nocturne No.19 in E-",
+                              Tonality = "Minor",
+                              Type = "Solo Piano")
+
+Chopin <- rbind(Chopin, r5_dun2)
+```
+
+## Scherzo No.2 in Bb-
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/choschz2.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 10  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 2
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Chopin",
+                              piece = "Scherzo No.2 in Bb-",
+                              Tonality = "Minor",
+                              Type = "Solo Piano")
+
+Chopin <- rbind(Chopin, r5_dun2)
+```
+
+## Grand Duo on Themes from Robert Le Diable
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/gdcon.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 1 and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 1
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Chopin",
+                              piece = "Grand Duo on Themes from Robert Le Diable",
+                              Tonality = "Minor",
+                              Type = "Duet")
+
+Chopin <- rbind(Chopin, r5_dun2)
+```
+
+## Ballade No.4 in F-
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/chopin-1.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 6  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 7
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Chopin",
+                              piece = "Ballade No.4 in F-",
+                              Tonality = "Minor",
+                              Type = "Solo Piano")
+
+Chopin <- rbind(Chopin, r5_dun2)
+View(Chopin)
+
+write.csv(Chopin, "chopin.csv")
+```
+
+
+# Brahms - Complete
+## String Quintet No.2 in G, Mvt. 2 Adagio
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/jbqu2ii.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 4  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 8
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+Brahms <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Brahms",
+                              piece = "String Quintet No.2 in G, Mvt. 2 Adagio",
+                              Tonality = "Minor",
+                              Type = "String Quintet")
+```
+
+## Ein deutsches Requiem, 4.Chorus: Wie lieblich sind deine Wohnungen (Eb Major)
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/brmsreq4.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 9
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Brahms",
+                              piece = "Ein deutsches Requiem, 4.Chorus: Wie lieblich sind deine Wohnungen",
+                              Tonality = "Major",
+                              Type = "Choral")
+
+Brahms <- rbind(Brahms, r5_dun2)
+```
+
+## Symphony No.3 in F, Mvt. 2 Andante
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/jk_br90b.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 0
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Brahms",
+                              piece = "Symphony No.3 in F, Mvt 2 Andante",
+                              Tonality = "Major",
+                              Type = "Symphony")
+
+Brahms <- rbind(Brahms, r5_dun2)
+```
+
+## Piano Sonata No.1 in C, Mvt. 1 Allegro
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/jbop1n1.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 0
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Brahms",
+                              piece = "Piano Sonata No.1 in C, Mvt. 1 Allegro",
+                              Tonality = "Major",
+                              Type = "Solo Piano")
+
+Brahms <- rbind(Brahms, r5_dun2)
+```
+
+## 11 Chorale Preludes, 1.Mein Jesu, der du mich
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/jbmj1221.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 8
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Brahms",
+                              piece = "11 Chorale Preludes, Op.posth.122	 
+1.Mein Jesu, der du mich",
+                              Tonality = "Minor",
+                              Type = "Organ")
+Brahms <- rbind(Brahms, r5_dun2)
+View(Brahms)
+write.csv(Brahms, "brahms.csv")
+```
+
+# Berlioz - In Progress
+
+## Symphonie Fantastique: 4. Marche au supplice (G minor)
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/syfan4.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 5
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+Berlioz <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Berlioz",
+                              piece = "Symphonie Fantastique: 4. Marche au supplice",
+                              Tonality = "Minor",
+                              Type = "Symphony")
+
+
+
+write.csv(Berlioz, "berlioz.csv")
+```
+
+
+# Beethoven - Complete
+## Symphony No.5 in C-, Op.67	, 1.Allegro con brio
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/dglvb67a.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 0
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Beethoven",
+                              piece = "Symphony 5, mvt. 1",
+                              Tonality = "Minor",
+                              Type = "Symphony")
+```
+
+## String Quartet No.13 in Bb, Op.130 ('Lieb'), 1.Adagio ma non troppo. Allegro
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/beesq131.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 10  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i]  + 2
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun3 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Beethoven",
+                              piece = "String Quartet 13, mvt. 1",
+                              Tonality = "Major",
+                              Type = "String Quartet")
+
+Beethoven <- rbind(r5_dun2, r5_dun3)
+```
+
+## Symphony No.7 in A, Op.92, 4.Finale: Allegro con brio
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/b7-4.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 9  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 3
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Beethoven",
+                              piece = "Symphony 7, mvt. 4",
+                              Tonality = "Major",
+                              Type = "Symphony")
+
+
+Beethoven <- rbind(Beethoven, r5_dun2)
+```
+
+## Piano Sonata No.10 in G, Op.14, No.2, 2.Andante
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/bps10-2.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 12  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 0
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Beethoven",
+                              piece = "Piano Sonata 10 mvt. 2",
+                              Tonality = "Major",
+                              Type = "Solo Piano")
+
+
+
+Beethoven <- rbind(Beethoven, r5_dun2)
+```
+
+## Piano Concerto No.1 in C, Op.15, 
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/be-pc-01.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 0
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Beethoven",
+                              piece = " Piano Concerto 1",
+                              Tonality = "Major",
+                              Type = "Piano Concerto")
+
+
+Beethoven <- rbind(Beethoven, r5_dun2)
+
+write.csv(Beethoven, "beethoven.csv")
+```
+
+# Verdi - Complete
+## Ave Maria, for mezzo-soprano, chorus, and orchestra	 
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/ver_avem.mid")
+
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 12  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 0
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Verdi",
+                              piece = "Ave Maria",
+                              Tonality = "Major",
+                              Type = "Symphony")
+```
+
+## Alzira (tragedia lirica), 1.Sinfonia
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/ajsalz00.mid")
+
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 2  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] +10
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Verdi",
+                              piece = "Alzira (tragedia lirica), 1.Sinfonia",
+                              Tonality = "Minor",
+                              Type = "Opera")
+
+Verdi <- rbind(r5_dun, r5_dun2)
+```
+
+## Aida (opera), 1.Prelude
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/verdi_a_.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 2  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 10
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Verdi",
+                              piece = "Aida, 1.Prelude",
+                              Tonality = "Major",
+                              Type = "Opera")
+
+
+Verdi <- rbind(Verdi, r5_dun2)
+```
+
+## La forza del destino, 1.Sinfonia (Overture)
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/vfdesou.mid")
+
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 9  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 3 
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer ="Verdi",
+                              piece = "La forza del destino (opera), 1.Sinfonia",
+                              Tonality = "Minor",
+                              Type = "Opera")
+
+Verdi <- rbind(Verdi, r5_dun2)
+```
+
+## Requiem Mass, for soloists, chorus, and orchestra (Manzoni Requiem), 1.Dies irae
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/ingemi1.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 7  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 5
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Verdi",
+                              piece = "Requiem, Dies Irae",
+                              Tonality = "Minor",
+                              Type = "Symphony")
+
+Verdi <- rbind(Verdi, r5_dun2)
+write.csv(Verdi, "verdi.csv")
+```
+
+# Dvorak - Only 3 pieces
+## Symphony no.9 Mvt. 2 Largo
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/dvolargo.mid")
+
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 1  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 11
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Dvorak",
+                              piece = "Symphony 9, Mvt. 2 Largo",
+                              Tonality = "Major",
+                              Type = "Symphony")
+```
+
+## Piece name here
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/polrus.mid")
+
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 0
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun3 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Dvorak",
+                              piece = "Rusalka, 5.Ballet: Slavnostní hudba (Polonaise)",
+                              Tonality = "Minor",
+                              Type = "Ballet")
+
+Dvorak <- rbind(r5_dun2, r5_dun3)
+```
+
+## String Quartet No.12 in F ('American'), Op.96, 1.Allegro ma non troppo
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/dv96_1.mid")
+
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 5  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 7
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Dvorak",
+                              piece = "String Quartet 12, mvt. 1",
+                              Tonality = "Major",
+                              Type = "String Quartet")
+
+
+Dvorak <- rbind(Dvorak, r5_dun2)
+
+write.csv(Dvorak, "dvorak.csv")
+```
+
+
+# Mahler - Only 3 Pieces
+## Symphony No.5 in C#-, 5.Rondo-Finale: Allegro
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/mahler55.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 2  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 10
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Mahler",
+                              piece = "Symphony No.5 in C#-, 5.Rondo-Finale: Allegro",
+                              Tonality = "Major",
+                              Type = "Symphony")
+```
+
+## Symphony No.9 in D, 1.Andante comodo
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/ma_9_1.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 2  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 10
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Mahler",
+                              piece = "Symphony No.9 in D, 1.Andante comodo",
+                              Tonality = "Major",
+                              Type = "Symphony")
+
+Mahler <- rbind(r5_dun, r5_dun2)
+```
+
+## Symphony No.6 in A- ('Tragic'), 1.Allegro energico, ma non troppo
+### Load in
+
+```r
+rach_5 <- readMidi("Midi/mahler61.mid")
+## Midi Transformations/Octave Normalizing
+source('R Scripts/MidiTransform.r')
+```
+
+### Change Key Here
+
+```r
+# take key num and add appropriate amount to transpose to C, here key is 9  and c is 12
+for (i in 1:NROW(r5$note)) {
+  r5$tran_note[i] = r5$note[i] + 3
+  if (r5$tran_note[i] > 12){
+    r5$tran_note[i] = r5$tran_note[i] - 12
+  } else {
+    r5$tran_note[i] = r5$tran_note[i]
+  }
+}
+
+## Chord and Roman Numeral Loops
+source('R Scripts/C_Loop.r')
+```
+
+
+### Change piece name here
+
+```r
+#change here for new pieces
+r5_dun2 <- r5_test2 %>% mutate(one_lag_tran = lag(tran_chord_named, n = 1),
+                              two_lag_tran = lag(tran_chord_named, n = 2),
+                              three_lag_tran = lag(tran_chord_named, n = 3),
+                              four_lag_tran = lag(tran_chord_named, n = 4),
+                              composer = "Mahler",
+                              piece = "Symphony No.6, Mvt. 1",
+                              Tonality = "Minor",
+                              Type = "Symphony")
+
+Mahler <- rbind(Mahler, r5_dun2)
+write.csv(Mahler, "mahler.csv")
+```
+

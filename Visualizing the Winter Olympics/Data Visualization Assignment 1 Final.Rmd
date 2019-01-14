@@ -1,9 +1,11 @@
 ---
-title: "Data Visualization Assignment 1"
+title: "Visualizing the Winter Olympics"
 author: "Nathan Colbert"
 date: "2/14/2018"
 output:
   html_document:
+    toc: TRUE
+    toc_float: TRUE
     keep_md: TRUE
 ---
 
@@ -25,10 +27,10 @@ library(DT)
 ```
 
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 
-winter <- read.csv("Desktop/winter.csv")
-dictionary <- read.csv("Desktop/dictionary.csv")
+winter <- read.csv("~/Desktop/Desktop/winter.csv")
+dictionary <- read.csv("~/Desktop/Desktop/dictionary.csv")
 Winter <- rename(winter, Code = Country)
 Winter$Code[Winter$Code == "GDR"] <- "GER"
 Winter$Code[Winter$Code == "EAU"] <- "GER"
